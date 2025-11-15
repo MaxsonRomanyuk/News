@@ -1,0 +1,63 @@
+{
+  "kind": "collectionType",
+  "collectionName": "articles",
+  "info": {
+    "singularName": "article",
+    "pluralName": "articles",
+    "displayName": "Article"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string",
+      "unique": true
+    },
+    "content": {
+      "type": "blocks"
+    },
+    "excerpt": {
+      "type": "text"
+    },
+    "coverImage": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "views": {
+      "type": "integer",
+      "default": 0
+    },
+    "isFeatured": {
+      "type": "boolean",
+      "default": false
+    },
+    "readingTime": {
+      "type": "decimal"
+    },
+    "tags": {
+      "type": "json"
+    },
+    "author": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::category.category",
+      "inversedBy": "articles"
+    }
+  }
+}
