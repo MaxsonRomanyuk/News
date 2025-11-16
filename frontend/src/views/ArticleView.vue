@@ -106,23 +106,31 @@ const goToNextArticle = () => {
 
 const incrementViews = async (articleId: number) => {
   try {
-    // Увеличиваем счетчик просмотров
-    await api.put(`/articles/${articleId}`, {
+    console.log('Incrementing views for article:', articleId)
+    
+    const currentArticle = await api.get(`/articles/${articleId}`)
+    const currentViews = currentArticle.data.views || 0
+    
+    const response = await api.put(`/articles/${articleId}`, {
       data: {
-        views: (article.value?.views || 0) + 1
+        views: currentViews + 1
       }
     })
-  } catch (err) {
-    console.error('Error incrementing views:', err)
+    
+    console.log('Views updated successfully:', response.data)
+
+    if (article.value) {
+      article.value.views = currentViews + 1
+    }
+  } catch (err: any) {
+    console.error('Error incrementing views:', err.response?.data || err.message)
   }
 }
-
 const fetchArticle = async () => {
   loading.value = true
   error.value = null
   
   try {
-    // Пробуем новый endpoint, если он есть, иначе старый
     try {
       const response = await api.get(`/articles/slug/${route.params.slug}`)
       if (response.data) {
@@ -198,6 +206,7 @@ onMounted(async () => {
   await fetchAllArticles()
   await fetchArticle()
 })
+
 </script>
 
 <style scoped>

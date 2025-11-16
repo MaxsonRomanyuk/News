@@ -2,6 +2,14 @@
   <div class="home">
     <h1>Последние новости</h1>
     
+    <!-- Отладочная информация -->
+    <div v-if="debug" style="background: #f0f0f0; padding: 10px; margin-bottom: 20px; border-radius: 5px;">
+      <strong>Отладка:</strong><br>
+      Статей: {{ articles.length }}<br>
+      Загрузка: {{ loading }}<br>
+      Ошибка: {{ error || 'нет' }}
+    </div>
+    
     <div v-if="loading" class="loading">
       Загрузка новостей...
     </div>
@@ -15,6 +23,7 @@
         v-for="article in articles" 
         :key="article.id" 
         class="news-card"
+        @click="goToArticle(article.slug)"
       >
         <div class="news-image" v-if="article.coverImage">
           <img 
@@ -44,41 +53,13 @@
             >
               ★ Избранное
             </span>
-            <span class="reading-time" v-if="article.readingTime">
-              {{ article.readingTime }} мин. чтения
-            </span>
           </div>
           
-          <div class="news-content-preview" v-if="article.content">
-            {{ getContentPreview(article.content) }}
-          </div>
-          
-          <router-link 
-            :to="`/article/${article.slug}`" 
-            class="read-more"
-          >
+          <button class="read-more">
             Читать далее
-          </router-link>
+          </button>
         </div>
       </article>
-    </div>
-
-    <div v-if="!loading && totalPages > 1" class="pagination">
-      <button 
-        @click="goToPage(currentPage - 1)" 
-        :disabled="currentPage === 1"
-      >
-        Назад
-      </button>
-      
-      <span>Страница {{ currentPage }} из {{ totalPages }}</span>
-      
-      <button 
-        @click="goToPage(currentPage + 1)" 
-        :disabled="currentPage === totalPages"
-      >
-        Вперед
-      </button>
     </div>
 
     <!-- Нет новостей -->
@@ -90,13 +71,14 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useNewsStore } from '@/stores/news';
 
+const router = useRouter();
 const newsStore = useNewsStore();
-const debug = ref(true); // Временно включим отладку
+const debug = ref(true);
 
-const { articles, loading, error, pagination, hasArticles, currentPage, totalPages } = newsStore;
-
+const { articles, loading, error, hasArticles } = newsStore;
 
 const getImageUrl = (coverImage: any): string => {
   if (coverImage?.url) {
@@ -106,36 +88,15 @@ const getImageUrl = (coverImage: any): string => {
 };
 
 const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  return new Date(dateString).toLocaleDateString('ru-RU');
 };
 
-const getContentPreview = (content: any[]): string => {
-  if (Array.isArray(content)) {
-    const text = content
-      .map(item => {
-        if (item.children && Array.isArray(item.children)) {
-          return item.children.map((child: any) => child.text || '').join('');
-        }
-        return '';
-      })
-      .join(' ')
-      .substring(0, 150);
-    
-    return text + (text.length === 150 ? '...' : '');
-  }
-  return '';
+const goToArticle = (slug: string) => {
+  router.push(`/article/${slug}`);
 };
 
-const goToPage = (page: number): void => {
-  newsStore.goToPage(page);
-};
-
-// Lifecycle
 onMounted(() => {
+  console.log('HomeView mounted - fetching articles');
   newsStore.fetchArticles(1);
 });
 </script>
@@ -159,10 +120,12 @@ onMounted(() => {
   padding: 20px;
   display: flex;
   gap: 20px;
-  transition: box-shadow 0.3s ease;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .news-card:hover {
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
@@ -190,7 +153,7 @@ onMounted(() => {
 .excerpt {
   color: #666;
   margin-bottom: 15px;
-  font-weight: 500;
+  line-height: 1.4;
 }
 
 .news-meta {
@@ -208,51 +171,19 @@ onMounted(() => {
   border-radius: 4px;
 }
 
-.reading-time {
-  color: #666;
-  font-style: italic;
-}
-
-.news-content-preview {
-  color: #555;
-  margin-bottom: 15px;
-  line-height: 1.5;
-}
-
 .read-more {
   color: #007bff;
-  text-decoration: none;
-  font-weight: 500;
+  background: none;
+  border: 1px solid #007bff;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .read-more:hover {
-  text-decoration: underline;
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  margin-top: 30px;
-}
-
-.pagination button {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: white;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-}
-
-.pagination button:hover:not(:disabled) {
-  background: #f5f5f5;
-}
-
-.pagination button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  background: #007bff;
+  color: white;
 }
 
 .loading, .error, .no-articles {
