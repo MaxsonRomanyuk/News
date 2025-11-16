@@ -462,6 +462,7 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
+    publishedDate: Schema.Attribute.DateTime;
     readingTime: Schema.Attribute.Decimal;
     slug: Schema.Attribute.String & Schema.Attribute.Unique;
     tags: Schema.Attribute.JSON;
