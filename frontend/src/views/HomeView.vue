@@ -1,5 +1,4 @@
 <template>
-  <!-- Тот же template что и раньше -->
   <div class="home">
     <h1>Последние новости</h1>
     
@@ -11,34 +10,51 @@
       {{ error }}
     </div>
 
-    <div v-if="hasArticles" class="news-list">
+    <div v-if="!loading && hasArticles" class="news-list">
       <article 
         v-for="article in articles" 
         :key="article.id" 
         class="news-card"
       >
-        <div class="news-image" v-if="article.attributes.coverImage">
+        <div class="news-image" v-if="article.coverImage">
           <img 
-            :src="getImageUrl(article.attributes.coverImage)" 
-            :alt="article.attributes.title"
+            :src="getImageUrl(article.coverImage)" 
+            :alt="article.title"
           >
         </div>
         
         <div class="news-content">
-          <h2>{{ article.attributes.title }}</h2>
-          <p class="excerpt">{{ article.attributes.excerpt }}</p>
+          <h2>{{ article.title }}</h2>
+          <p class="excerpt">{{ article.excerpt }}</p>
           
           <div class="news-meta">
             <span class="date">
-              {{ formatDate(article.attributes.publishedAt) }}
+              {{ formatDate(article.publishedDate || article.createdAt) }}
             </span>
-            <span class="category" v-if="article.attributes.category">
-              {{ article.attributes.category.data.attributes.name }}
+            <span 
+              class="category" 
+              v-if="article.category"
+            >
+              {{ article.category.name }}
+            </span>
+            <span 
+              class="featured" 
+              v-if="article.isFeatured"
+              style="color: #ff6b00;"
+            >
+              ★ Избранное
+            </span>
+            <span class="reading-time" v-if="article.readingTime">
+              {{ article.readingTime }} мин. чтения
             </span>
           </div>
           
+          <div class="news-content-preview" v-if="article.content">
+            {{ getContentPreview(article.content) }}
+          </div>
+          
           <router-link 
-            :to="`/article/${article.attributes.slug}`" 
+            :to="`/article/${article.slug}`" 
             class="read-more"
           >
             Читать далее
@@ -47,7 +63,7 @@
       </article>
     </div>
 
-    <div v-if="totalPages > 1" class="pagination">
+    <div v-if="!loading && totalPages > 1" class="pagination">
       <button 
         @click="goToPage(currentPage - 1)" 
         :disabled="currentPage === 1"
@@ -65,37 +81,53 @@
       </button>
     </div>
 
-    <div v-if="!loading && !hasArticles" class="no-articles">
+    <!-- Нет новостей -->
+    <div v-if="!loading && !hasArticles && !error" class="no-articles">
       Новостей пока нет
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useNewsStore } from '@/stores/news';
-import type { StrapiImage } from '@/types/strapi';
 
 const newsStore = useNewsStore();
+const debug = ref(true); // Временно включим отладку
 
-// Computed
-const articles = newsStore.articles;
-const loading = newsStore.loading;
-const error = newsStore.error;
-const hasArticles = newsStore.hasArticles;
-const currentPage = newsStore.currentPage;
-const totalPages = newsStore.totalPages;
+const { articles, loading, error, pagination, hasArticles, currentPage, totalPages } = newsStore;
 
-// Methods
-const getImageUrl = (coverImage: StrapiImage): string => {
-  if (coverImage?.data?.attributes?.url) {
-    return `http://localhost:1337${coverImage.data.attributes.url}`;
+
+const getImageUrl = (coverImage: any): string => {
+  if (coverImage?.url) {
+    return `http://localhost:1337${coverImage.url}`;
   }
   return '';
 };
 
 const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('ru-RU');
+  return new Date(dateString).toLocaleDateString('ru-RU', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+const getContentPreview = (content: any[]): string => {
+  if (Array.isArray(content)) {
+    const text = content
+      .map(item => {
+        if (item.children && Array.isArray(item.children)) {
+          return item.children.map((child: any) => child.text || '').join('');
+        }
+        return '';
+      })
+      .join(' ')
+      .substring(0, 150);
+    
+    return text + (text.length === 150 ? '...' : '');
+  }
+  return '';
 };
 
 const goToPage = (page: number): void => {
@@ -109,7 +141,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Тот же CSS что и раньше */
 .home {
   max-width: 800px;
   margin: 0 auto;
@@ -128,6 +159,11 @@ onMounted(() => {
   padding: 20px;
   display: flex;
   gap: 20px;
+  transition: box-shadow 0.3s ease;
+}
+
+.news-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .news-image {
@@ -154,6 +190,7 @@ onMounted(() => {
 .excerpt {
   color: #666;
   margin-bottom: 15px;
+  font-weight: 500;
 }
 
 .news-meta {
@@ -162,6 +199,7 @@ onMounted(() => {
   margin-bottom: 15px;
   font-size: 0.9em;
   color: #888;
+  flex-wrap: wrap;
 }
 
 .category {
@@ -170,9 +208,21 @@ onMounted(() => {
   border-radius: 4px;
 }
 
+.reading-time {
+  color: #666;
+  font-style: italic;
+}
+
+.news-content-preview {
+  color: #555;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
 .read-more {
   color: #007bff;
   text-decoration: none;
+  font-weight: 500;
 }
 
 .read-more:hover {
@@ -193,6 +243,11 @@ onMounted(() => {
   background: white;
   cursor: pointer;
   border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: #f5f5f5;
 }
 
 .pagination button:disabled {
@@ -208,5 +263,9 @@ onMounted(() => {
 
 .error {
   color: #d9534f;
+}
+
+.loading {
+  color: #666;
 }
 </style>

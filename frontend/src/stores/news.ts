@@ -1,25 +1,18 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import api from '@/services/api';
-import type { ArticleEntity, ArticleResponse } from '@/types/strapi';
-
-interface Pagination {
-  page: number;
-  pageSize: number;
-  total: number;
-  pageCount: number;
-}
+import type { ArticleEntity } from '@/types/strapi';
 
 export const useNewsStore = defineStore('news', () => {
   // State
   const articles = ref<ArticleEntity[]>([]);
   const loading = ref<boolean>(false);
   const error = ref<string | null>(null);
-  const pagination = ref<Pagination>({
+  const pagination = ref({
     page: 1,
     pageSize: 10,
-    total: 0,
-    pageCount: 0
+    pageCount: 0,
+    total: 0
   });
 
   // Getters
@@ -33,7 +26,7 @@ export const useNewsStore = defineStore('news', () => {
     error.value = null;
     
     try {
-      const response = await api.get<ArticleResponse>('/articles', {
+      const response = await api.get<ArticleEntity[]>('/articles', {
         params: {
           'populate': 'coverImage,category,author',
           'sort': 'publishedAt:desc',
@@ -42,8 +35,21 @@ export const useNewsStore = defineStore('news', () => {
         }
       });
 
-      articles.value = response.data.data;
-      pagination.value = response.data.meta.pagination;
+      console.log('API Response:', response.data); 
+
+      if (Array.isArray(response.data)) {
+        articles.value = response.data;
+        
+        pagination.value = {
+          page: page,
+          pageSize: pagination.value.pageSize,
+          pageCount: Math.ceil(response.data.length / pagination.value.pageSize),
+          total: response.data.length
+        };
+      } else {
+        throw new Error('Unexpected API response format');
+      }
+      
     } catch (err) {
       error.value = 'Не удалось загрузить новости';
       console.error('Error fetching articles:', err);
