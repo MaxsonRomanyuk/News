@@ -1,0 +1,18 @@
+{
+  "kind": "collectionType",
+  "collectionName": "articlesnews",
+  "info": {
+    "singularName": "articlesnew",
+    "pluralName": "articlesnews",
+    "displayName": "Articlesnew"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "text": {
+      "type": "string"
+    }
+  }
+}

@@ -474,6 +474,34 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiArticlesnewArticlesnew extends Struct.CollectionTypeSchema {
+  collectionName: 'articlesnews';
+  info: {
+    displayName: 'Articlesnew';
+    pluralName: 'articlesnews';
+    singularName: 'articlesnew';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::articlesnew.articlesnew'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    text: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
   collectionName: 'categories';
   info: {
@@ -1015,6 +1043,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::article.article': ApiArticleArticle;
+      'api::articlesnew.articlesnew': ApiArticlesnewArticlesnew;
       'api::category.category': ApiCategoryCategory;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
