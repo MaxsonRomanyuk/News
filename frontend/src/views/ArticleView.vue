@@ -1,55 +1,141 @@
 <template>
   <div class="article-page">
-    <div v-if="loading" class="loading">Загрузка статьи...</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
-    <div v-else-if="article" class="article-content">
-      <h1>{{ article.title }}</h1>
-      
-      <div class="article-meta">
-        <span class="date">{{ formatDate(article.publishedDate || article.createdAt) }}</span>
-        <span class="category" v-if="article.category">
-          {{ article.category.name }}
-        </span>
-        <span class="author" v-if="article.author">
-          Автор: {{ article.author.username }}
-        </span>
-        <span class="views" v-if="article.views !== undefined">
-          👁️ {{ article.views }} просмотров
-        </span>
-        <span class="reading-time" v-if="article.readingTime">
-          ⏱️ {{ article.readingTime }} мин. чтения
-        </span>
+    <!-- Хедер статьи -->
+    <header class="article-header" v-if="article">
+      <div class="container">
+        <nav class="breadcrumb">
+          <router-link to="/" class="breadcrumb-link">Главная</router-link>
+          <span class="breadcrumb-separator">/</span>
+          <span class="breadcrumb-current">{{ article.title }}</span>
+        </nav>
+        
+        <div class="header-content">
+          <div class="article-meta">
+            <span class="category-badge">{{ article.category?.name }}</span>
+            <span class="date">{{ formatDate(article.publishedDate || article.createdAt) }}</span>
+            <span class="reading-time" v-if="article.readingTime">⏱️ {{ article.readingTime }} мин чтения</span>
+            <span class="views">👁️ {{ article.views }} просмотров</span>
+          </div>
+          
+          <h1 class="article-title">{{ article.title }}</h1>
+          <p class="article-excerpt">{{ article.excerpt }}</p>
+          
+          <div class="author-info" v-if="article.author">
+            <div class="author-avatar">
+              <div class="avatar-placeholder">
+                {{ article.author.username?.charAt(0).toUpperCase() }}
+              </div>
+            </div>
+            <div class="author-details">
+              <span class="author-name">{{ article.author.username }}</span>
+              <span class="author-role">Автор</span>
+            </div>
+          </div>
+        </div>
       </div>
+    </header>
 
-      <div class="cover-image" v-if="article.coverImage">
+    <div class="article-cover" v-if="article?.coverImage">
+      <div class="container">
         <img 
           :src="getImageUrl(article.coverImage)" 
           :alt="article.title"
+          class="cover-image"
         >
       </div>
+    </div>
 
-      <div class="content" v-html="renderContent(article.content)"></div>
+    <main class="article-content" v-if="article">
+      <div class="container">
+        <div class="content-wrapper">
+          <!-- Боковая панель с действиями -->
+          <aside class="sidebar-actions">
+            <div class="action-group">
+              <button class="action-btn" @click="shareArticle" title="Поделиться">
+                <span class="action-icon">📤</span>
+                <span class="action-text">Поделиться</span>
+              </button>
+              
+              <button class="action-btn" @click="toggleBookmark" :class="{ active: isBookmarked }" title="В закладки">
+                <span class="action-icon">🔖</span>
+                <span class="action-text">{{ isBookmarked ? 'В закладках' : 'В закладки' }}</span>
+              </button>
 
-      <div class="article-navigation">
-        <router-link to="/" class="nav-link back-to-list">
-          ← Все новости
-        </router-link>
+              <!-- Кнопки редактора -->
+              <div class="editor-actions" v-if="authStore.user?.role?.name === 'editor'">
+                <button class="action-btn edit-btn" @click="editArticle" title="Редактировать">
+                  <span class="action-icon">✏️</span>
+                  <span class="action-text">Редактировать</span>
+                </button>
+                
+                <button class="action-btn delete-btn" @click="confirmDelete" title="Удалить">
+                  <span class="action-icon">🗑️</span>
+                  <span class="action-text">Удалить</span>
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          <article class="content-main">
+            <div class="content-body" v-html="renderContent(article.content)"></div>
+            
+            <div class="article-tags" v-if="article.tags && article.tags.length > 0">
+              <span class="tags-label">Теги:</span>
+              <span v-for="tag in article.tags" :key="tag" class="tag">{{ tag }}</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </main>
+
+    <nav class="article-navigation" v-if="allArticles.length > 1">
+      <div class="container">
+        <button 
+          @click="goToPreviousArticle" 
+          :disabled="!hasPreviousArticle"
+          class="nav-btn prev-btn"
+        >
+          <span class="nav-arrow">←</span>
+          <div class="nav-content">
+            <span class="nav-label">Предыдущая</span>
+            <span class="nav-title">{{ previousArticle?.title }}</span>
+          </div>
+        </button>
         
-        <div class="nav-buttons">
-          <button 
-            @click="goToPreviousArticle" 
-            :disabled="!hasPreviousArticle"
-            class="nav-button"
-          >
-            ← Предыдущая
-          </button>
-          <button 
-            @click="goToNextArticle" 
-            :disabled="!hasNextArticle"
-            class="nav-button"
-          >
-            Следующая →
-          </button>
+        <button 
+          @click="goToNextArticle" 
+          :disabled="!hasNextArticle"
+          class="nav-btn next-btn"
+        >
+          <div class="nav-content">
+            <span class="nav-label">Следующая</span>
+            <span class="nav-title">{{ nextArticle?.title }}</span>
+          </div>
+          <span class="nav-arrow">→</span>
+        </button>
+      </div>
+    </nav>
+
+    <div v-if="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Загружаем статью...</p>
+    </div>
+
+    <div v-else-if="error" class="error-state">
+      <div class="error-icon">😞</div>
+      <h3>Не удалось загрузить статью</h3>
+      <p>{{ error }}</p>
+      <button @click="fetchArticle" class="retry-btn">Попробовать снова</button>
+      <router-link to="/" class="home-link">Вернуться на главную</router-link>
+    </div>
+
+    <div v-if="showDeleteModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>Подтверждение удаления</h3>
+        <p>Вы уверены, что хотите удалить статью "{{ article?.title }}"?</p>
+        <div class="modal-actions">
+          <button @click="deleteArticle" class="btn-danger">Удалить</button>
+          <button @click="showDeleteModal = false" class="btn-cancel">Отмена</button>
         </div>
       </div>
     </div>
@@ -60,25 +146,30 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
+
 const article = ref<any>(null)
+const allArticles = ref<any[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
-const allArticles = ref<any[]>([])
+const isBookmarked = ref(false)
+const showDeleteModal = ref(false)
 
-// Вычисляемые свойства для навигации
 const currentArticleIndex = computed(() => 
   allArticles.value.findIndex(a => a.slug === route.params.slug)
 )
 
-const hasPreviousArticle = computed(() => 
-  currentArticleIndex.value > 0
+const hasPreviousArticle = computed(() => currentArticleIndex.value > 0)
+const hasNextArticle = computed(() => currentArticleIndex.value < allArticles.value.length - 1)
+const previousArticle = computed(() => 
+  hasPreviousArticle.value ? allArticles.value[currentArticleIndex.value - 1] : null
 )
-
-const hasNextArticle = computed(() => 
-  currentArticleIndex.value < allArticles.value.length - 1
+const nextArticle = computed(() => 
+  hasNextArticle.value ? allArticles.value[currentArticleIndex.value + 1] : null
 )
 
 const fetchAllArticles = async () => {
@@ -90,59 +181,11 @@ const fetchAllArticles = async () => {
   }
 }
 
-const goToPreviousArticle = () => {
-  if (hasPreviousArticle.value) {
-    const prevArticle = allArticles.value[currentArticleIndex.value - 1]
-    router.push(`/article/${prevArticle.slug}`)
-  }
-}
-
-const goToNextArticle = () => {
-  if (hasNextArticle.value) {
-    const nextArticle = allArticles.value[currentArticleIndex.value + 1]
-    router.push(`/article/${nextArticle.slug}`)
-  }
-}
-
-const incrementViews = async (articleId: number) => {
-  try {
-    console.log('Incrementing views for article:', articleId)
-    
-    const currentArticle = await api.get(`/articles/${articleId}`)
-    const currentViews = currentArticle.data.views || 0
-    
-    const response = await api.put(`/articles/${articleId}`, {
-      data: {
-        views: currentViews + 1
-      }
-    })
-    
-    console.log('Views updated successfully:', response.data)
-
-    if (article.value) {
-      article.value.views = currentViews + 1
-    }
-  } catch (err: any) {
-    console.error('Error incrementing views:', err.response?.data || err.message)
-  }
-}
 const fetchArticle = async () => {
   loading.value = true
   error.value = null
   
   try {
-    try {
-      const response = await api.get(`/articles/slug/${route.params.slug}`)
-      if (response.data) {
-        article.value = response.data
-        await incrementViews(response.data.id)
-        return
-      }
-    } catch (slugError) {
-      console.log('Slug endpoint not available, using filter method')
-    }
-
-    // Fallback: используем старый метод
     const response = await api.get(`/articles?filters[slug][$eq]=${route.params.slug}&populate=coverImage,category,author`)
     
     if (response.data.length > 0) {
@@ -152,14 +195,75 @@ const fetchArticle = async () => {
       error.value = 'Статья не найдена'
     }
   } catch (err: any) {
-    if (err.response?.status === 404) {
-      error.value = 'Статья не найдена'
-    } else {
-      error.value = 'Не удалось загрузить статью'
-    }
     console.error('Error fetching article:', err)
+    error.value = 'Не удалось загрузить статью. Пожалуйста, попробуйте позже.'
   } finally {
     loading.value = false
+  }
+}
+
+const incrementViews = async (articleId: number) => {
+  try {
+    await api.put(`/articles/${articleId}`, {
+      data: {
+        views: (article.value?.views || 0) + 1
+      }
+    })
+  } catch (err) {
+    console.error('Error incrementing views:', err)
+  }
+}
+
+const shareArticle = () => {
+  if (navigator.share) {
+    navigator.share({
+      title: article.value.title,
+      text: article.value.excerpt,
+      url: window.location.href
+    })
+  } else {
+    navigator.clipboard.writeText(window.location.href)
+    alert('Ссылка скопирована в буфер обмена!')
+  }
+}
+
+const toggleBookmark = () => {
+  isBookmarked.value = !isBookmarked.value
+
+}
+
+const editArticle = () => {
+  if (article.value) {
+    router.push(`/edit-article/${article.value.slug}`)
+  }
+}
+
+const confirmDelete = () => {
+  showDeleteModal.value = true
+}
+
+const deleteArticle = async () => {
+  if (!article.value) return
+  
+  try {
+    await api.delete(`/articles/${article.value.id}`)
+    showDeleteModal.value = false
+    router.push('/')
+  } catch (err: any) {
+    console.error('Error deleting article:', err)
+    error.value = 'Не удалось удалить статью'
+  }
+}
+
+const goToPreviousArticle = () => {
+  if (hasPreviousArticle.value) {
+    router.push(`/article/${previousArticle.value.slug}`)
+  }
+}
+
+const goToNextArticle = () => {
+  if (hasNextArticle.value) {
+    router.push(`/article/${nextArticle.value.slug}`)
   }
 }
 
@@ -206,128 +310,508 @@ onMounted(async () => {
   await fetchAllArticles()
   await fetchArticle()
 })
-
 </script>
 
 <style scoped>
 .article-page {
-  max-width: 800px;
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.container {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 0 20px;
 }
 
-.loading, .error {
-  text-align: center;
-  padding: 40px;
-  font-size: 1.1em;
+/* Хедер статьи */
+.article-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 40px 0;
 }
 
-.error {
-  color: #d9534f;
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 30px;
+  font-size: 0.9rem;
+}
+
+.breadcrumb-link {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+}
+
+.breadcrumb-link:hover {
+  color: white;
+}
+
+.breadcrumb-separator {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.breadcrumb-current {
+  color: white;
+  font-weight: 500;
+}
+
+.header-content {
+  max-width: 800px;
 }
 
 .article-meta {
   display: flex;
-  gap: 15px;
+  gap: 20px;
   margin-bottom: 20px;
-  color: #666;
-  font-size: 0.9em;
   flex-wrap: wrap;
   align-items: center;
 }
 
-.category {
-  background: #f0f0f0;
-  padding: 2px 8px;
-  border-radius: 4px;
+.category-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6px 15px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
-.views, .reading-time {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.date, .reading-time, .views {
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 
-.cover-image {
+.article-title {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.2;
   margin-bottom: 20px;
 }
 
-.cover-image img {
-  width: 100%;
-  max-height: 400px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.content {
+.article-excerpt {
+  font-size: 1.3rem;
+  opacity: 0.9;
   line-height: 1.6;
   margin-bottom: 30px;
 }
 
-.article-navigation {
+.author-info {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid #ddd;
+  gap: 15px;
 }
 
-.nav-buttons {
+.author-avatar .avatar-placeholder {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.author-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.author-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.author-role {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* Обложка */
+.article-cover {
+  background: white;
+  padding: 0;
+}
+
+.cover-image {
+  width: 100%;
+  max-height: 500px;
+  object-fit: cover;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+/* Основной контент */
+.article-content {
+  padding: 60px 0;
+  background: white;
+}
+
+.content-wrapper {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 60px;
+  align-items: start;
+}
+
+/* Боковая панель */
+.sidebar-actions {
+  position: sticky;
+  top: 100px;
+}
+
+.action-group {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-.nav-button {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 4px;
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  text-align: left;
+  width: 100%;
 }
 
-.nav-button:hover:not(:disabled) {
-  background: #f5f5f5;
+.action-btn:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+  transform: translateX(5px);
 }
 
-.nav-button:disabled {
+.action-btn.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.action-icon {
+  font-size: 1.2rem;
+}
+
+.action-text {
+  font-weight: 500;
+}
+
+.edit-btn:hover {
+  background: #28a745;
+  border-color: #28a745;
+}
+
+.delete-btn:hover {
+  background: #dc3545;
+  border-color: #dc3545;
+}
+
+/* Контент статьи */
+.content-main {
+  max-width: 100%;
+}
+
+.content-body {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #333;
+}
+
+.article-tags {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 2px solid #f8f9fa;
+}
+
+.tags-label {
+  font-weight: 600;
+  margin-right: 15px;
+  color: #666;
+}
+
+.tag {
+  background: #e9ecef;
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 0.9rem;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+
+/* Навигация */
+.article-navigation {
+  background: white;
+  padding: 40px 0;
+  border-top: 2px solid #f8f9fa;
+}
+
+.article-navigation .container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 25px;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+  transform: translateY(-2px);
+}
+
+.nav-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.back-to-list {
-  color: #007bff;
-  text-decoration: none;
+.prev-btn {
+  justify-content: flex-start;
 }
 
-.back-to-list:hover {
-  text-decoration: underline;
+.next-btn {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.nav-arrow {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.nav-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.nav-title {
+  font-weight: 600;
+  display: block;
+  line-height: 1.3;
+}
+
+
+.loading-state, .error-state {
+  text-align: center;
+  padding: 100px 20px;
+  background: white;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #e9ecef;
+  border-top: 5px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.error-state h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.error-state p {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.retry-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-right: 15px;
+}
+
+.home-link {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+}
+
+.modal-content h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.modal-content p {
+  color: #666;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-cancel {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
+.btn-cancel:hover {
+  background: #5a6268;
+}
+
+
+@media (max-width: 968px) {
+  .content-wrapper {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  
+  .sidebar-actions {
+    position: static;
+  }
+  
+  .action-group {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .action-btn {
+    flex: 1;
+    min-width: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .article-title {
+    font-size: 2rem;
+  }
+  
+  .article-excerpt {
+    font-size: 1.1rem;
+  }
+  
+  .article-navigation .container {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
 
 <style>
-/* Глобальные стили для контента (без scoped) */
-.content p {
-  margin-bottom: 1em;
-}
 
-.content h2 {
-  margin: 1.5em 0 0.5em 0;
+.content-body h2 {
+  font-size: 1.8rem;
+  margin: 2em 0 1em 0;
   color: #333;
+  line-height: 1.3;
 }
 
-.content h3 {
-  margin: 1.2em 0 0.5em 0;
+.content-body h3 {
+  font-size: 1.4rem;
+  margin: 1.5em 0 0.8em 0;
   color: #444;
 }
 
-.content ul, .content ol {
-  margin: 1em 0;
+.content-body p {
+  margin-bottom: 1.5em;
+}
+
+.content-body ul, .content-body ol {
+  margin: 1.5em 0;
   padding-left: 2em;
 }
 
-.content li {
+.content-body li {
   margin-bottom: 0.5em;
+  line-height: 1.6;
+}
+
+.content-body strong {
+  font-weight: 600;
+  color: #333;
+}
+
+.content-body em {
+  font-style: italic;
+  color: #555;
 }
 </style>
