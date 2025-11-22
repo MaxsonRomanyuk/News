@@ -48,7 +48,7 @@
 
     <footer class="main-footer">
       <div class="footer-container">
-        <p>&copy; 2024 NewsPortal. Все права защищены.</p>
+        <p>&copy; 2025 NewsPortal. Все права защищены.</p>
       </div>
     </footer>
   </div>
