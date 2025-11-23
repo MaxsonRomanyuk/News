@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,7 +7,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView
+      component: () => import('../views/HomeView.vue')
     },
     {
       path: '/login',
@@ -28,8 +28,40 @@ const router = createRouter({
       path: '/article/:slug',
       name: 'article',
       component: () => import('../views/ArticleView.vue')
+    },
+    {
+      path: '/create-article',
+      name: 'create-article',
+      component: () => import('../views/CreateArticleView.vue'),
+      meta: { requiresAuth: true, requiresEditor: true }
+    },
+    {
+      path: '/edit-article/:slug',
+      name: 'edit-article',
+      component: () => import('../views/EditArticleView.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })
 
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next('/login')
+    return
+  }
+  
+  if (to.meta.requiresGuest && authStore.isAuthenticated) {
+    next('/')
+    return
+  }
+  
+  if (to.meta.requiresEditor && authStore.user?.role?.name !== 'editor') {
+    next('/')
+    return
+  }
+  
+  next()
+})
 export default router

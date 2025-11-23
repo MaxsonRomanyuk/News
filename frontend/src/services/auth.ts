@@ -15,7 +15,12 @@ export interface User {
   id: number;
   username: string;
   email: string;
-  role: string;
+  role?: {
+    id: number;
+    name: string;
+    description: string;
+    type: string;
+  };
 }
 
 export const authService = {
@@ -29,8 +34,9 @@ export const authService = {
     return response.data;
   },
 
-  async getMe() {
-    const response = await api.get('/users/me');
+  async getCurrentUser(): Promise<User> {
+    const response = await api.get('/users/me?populate=role');
+    console.log('✅ User with role:', response.data);
     return response.data;
   },
 

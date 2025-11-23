@@ -15,20 +15,25 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const data = await authService.login(credentials);
       authService.saveToken(data.jwt);
-      authService.saveUser(data.user);
       
-      user.value = data.user;
+      const userWithRole = await authService.getCurrentUser();
+      authService.saveUser(userWithRole);
+      
+      user.value = userWithRole;
       isAuthenticated.value = true;
+      
+      console.log('✅ Login successful, user role:', userWithRole.role?.name);
       
       return data;
     } catch (err: any) {
       error.value = err.response?.data?.error?.message || 'Ошибка входа';
+      console.error('Login error:', err);
       throw err;
     } finally {
       loading.value = false;
     }
   };
-
+  
   const register = async (userData: RegisterData) => {
     loading.value = true;
     error.value = null;
@@ -36,14 +41,19 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const data = await authService.register(userData);
       authService.saveToken(data.jwt);
-      authService.saveUser(data.user);
       
-      user.value = data.user;
+      const userWithRole = await authService.getCurrentUser();
+      authService.saveUser(userWithRole);
+      
+      user.value = userWithRole;
       isAuthenticated.value = true;
+      
+      console.log('✅ Registration successful, user role:', userWithRole.role?.name);
       
       return data;
     } catch (err: any) {
       error.value = err.response?.data?.error?.message || 'Ошибка регистрации';
+      console.error('Register error:', err);
       throw err;
     } finally {
       loading.value = false;

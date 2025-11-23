@@ -61,7 +61,6 @@
                 <span class="action-text">{{ isBookmarked ? 'В закладках' : 'В закладки' }}</span>
               </button>
 
-              <!-- Кнопки редактора -->
               <div class="editor-actions" v-if="authStore.user?.role?.name === 'editor'">
                 <button class="action-btn edit-btn" @click="editArticle" title="Редактировать">
                   <span class="action-icon">✏️</span>

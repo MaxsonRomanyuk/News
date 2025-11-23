@@ -28,7 +28,7 @@
                   <span class="dropdown-arrow">▼</span>
                 </button>
                 <div class="dropdown-menu">
-                  <button v-if="authStore.user?.role?.name === 'editor'" @click="goToCreateArticle" class="dropdown-item">
+                  <button v-if="authStore.user?.role?.name === 'Authenticated'" @click="goToCreateArticle" class="dropdown-item">
                     📝 Новая статья
                   </button>
                   <button @click="handleLogout" class="dropdown-item logout-item">
