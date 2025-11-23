@@ -141,10 +141,16 @@ const featuredArticles = computed(() => {
 
 const fetchCategories = async () => {
   try {
+    console.log('Fetching categories...');
     const response = await api.get('/categories');
-    categories.value = response.data;
-  } catch (err) {
+    console.log('Categories response:', response.data);
+    
+    categories.value = response.data.data || response.data;
+    
+    console.log('Processed categories:', categories.value);
+  } catch (err: any) {
     console.error('Error fetching categories:', err);
+    console.error('Error details:', err.response?.data);
   }
 };
 
