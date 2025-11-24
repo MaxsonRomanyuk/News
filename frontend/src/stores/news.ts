@@ -1,10 +1,9 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import api from '@/services/api';
 import type { ArticleEntity } from '@/types/strapi';
 
 export const useNewsStore = defineStore('news', () => {
-  // State
   const articles = ref<ArticleEntity[]>([]);
   const loading = ref<boolean>(false);
   const error = ref<string | null>(null);
@@ -15,18 +14,19 @@ export const useNewsStore = defineStore('news', () => {
     total: 0
   });
 
-  // Getters
-  const hasArticles = computed(() => articles.value.length > 0);
+  const hasArticles = computed(() => {
+    const has = articles.value.length > 0;
+    return has;
+  });
   const currentPage = computed(() => pagination.value.page);
   const totalPages = computed(() => pagination.value.pageCount);
 
-  // Actions
   const fetchArticles = async (page: number = 1): Promise<void> => {
     loading.value = true;
     error.value = null;
     
     try {
-      const response = await api.get<ArticleEntity[]>('/articles', {
+      const response = await api.get('/articles', {
         params: {
           'populate': 'coverImage,category,author',
           'sort': 'publishedAt:desc',
@@ -35,11 +35,11 @@ export const useNewsStore = defineStore('news', () => {
         }
       });
 
-      console.log('API Response:', response.data); 
-
+      console.log('📦 API Response:', response.data); 
+      
       if (Array.isArray(response.data)) {
-        articles.value = response.data;
-        
+        articles.value.splice(0, articles.value.length, ...response.data);
+
         pagination.value = {
           page: page,
           pageSize: pagination.value.pageSize,
@@ -52,7 +52,7 @@ export const useNewsStore = defineStore('news', () => {
       
     } catch (err) {
       error.value = 'Не удалось загрузить новости';
-      console.error('Error fetching articles:', err);
+      console.error('❌ Error fetching articles:', err);
     } finally {
       loading.value = false;
     }

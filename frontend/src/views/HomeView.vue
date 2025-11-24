@@ -47,17 +47,17 @@
           </div>
 
           
-          <div v-if="loading" class="loading-state">
+          <div v-if="newsStore.loading" class="loading-state">
             <div class="spinner"></div>
             <p>Загружаем новости...</p>
           </div>
 
-          <div v-else-if="error" class="error-state">
+          <div v-else-if="newsStore.error" class="error-state">
             <p>😞 {{ error }}</p>
             <button @click="fetchArticles(1)" class="retry-btn">Попробовать снова</button>
           </div>
 
-          <div v-else-if="!hasArticles" class="empty-state">
+          <div v-else-if="!newsStore.hasArticles" class="empty-state">
             <p>📰 Новостей пока нет</p>
           </div>
 
@@ -183,7 +183,7 @@ const goToPage = (page: number) => {
 
 onMounted(async () => {
   await fetchCategories();
-  newsStore.fetchArticles(1);
+  await newsStore.fetchArticles(1);
 });
 </script>
 
