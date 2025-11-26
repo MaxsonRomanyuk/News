@@ -88,8 +88,9 @@ const fetchArticle = async () => {
 
     const foundArticle = response.data[0]
     
-    // Проверяем права доступа
-    if (authStore.user?.role?.name !== 'editor' && foundArticle.author?.id !== authStore.user?.id) {
+    if (authStore.user?.role?.name !== 'Editor' && foundArticle.author?.id !== authStore.user?.id) {
+      alert("У вас нет прав для редактирования этой статьи")
+      //alert("Чтобы изменять новости нужна роль \'Editor\' или изменение своих новостей")
       router.push('/')
       return
     }
