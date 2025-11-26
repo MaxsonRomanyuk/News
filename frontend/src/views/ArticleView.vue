@@ -60,8 +60,8 @@
                 <span class="action-icon">🔖</span>
                 <span class="action-text">{{ isBookmarked ? 'В закладках' : 'В закладки' }}</span>
               </button>
-
-              <div class="editor-actions" v-if="authStore.user?.role?.name === 'editor'">
+              
+              <div class="editor-actions" v-if="authStore.user?.role?.name === 'Editor'">
                 <button class="action-btn edit-btn" @click="editArticle" title="Редактировать">
                   <span class="action-icon">✏️</span>
                   <span class="action-text">Редактировать</span>
@@ -142,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
@@ -157,6 +157,8 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const isBookmarked = ref(false)
 const showDeleteModal = ref(false)
+
+
 
 const currentArticleIndex = computed(() => 
   allArticles.value.findIndex(a => a.slug === route.params.slug)
@@ -183,6 +185,7 @@ const fetchAllArticles = async () => {
 const fetchArticle = async () => {
   loading.value = true
   error.value = null
+  article.value = null
   
   try {
     const response = await api.get(`/articles?filters[slug][$eq]=${route.params.slug}&populate=coverImage,category,author`)
@@ -190,6 +193,7 @@ const fetchArticle = async () => {
     if (response.data.length > 0) {
       article.value = response.data[0]
       await incrementViews(response.data[0].id)
+
     } else {
       error.value = 'Статья не найдена'
     }
@@ -212,7 +216,15 @@ const incrementViews = async (articleId: number) => {
     console.error('Error incrementing views:', err)
   }
 }
-
+watch(
+  () => route.params.slug,
+  async (newSlug, oldSlug) => {
+    console.log('🔄 Route changed:', oldSlug, '→', newSlug)
+    if (newSlug && newSlug !== oldSlug) {
+      await fetchArticle()
+    }
+  }
+)
 const shareArticle = () => {
   if (navigator.share) {
     navigator.share({
@@ -228,7 +240,6 @@ const shareArticle = () => {
 
 const toggleBookmark = () => {
   isBookmarked.value = !isBookmarked.value
-
 }
 
 const editArticle = () => {
