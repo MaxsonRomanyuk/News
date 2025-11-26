@@ -50,7 +50,9 @@ const successMessage = ref<string>('')
 const fetchCategories = async () => {
   try {
     const response = await api.get('/categories')
-    categories.value = response.data
+    categories.value = response.data.data || response.data;
+
+    console.log('Processed categories for create:', categories.value);
   } catch (err) {
     console.error('Error fetching categories:', err)
     error.value = 'Не удалось загрузить категории'
@@ -102,7 +104,7 @@ const handleCancel = () => {
 }
 
 onMounted(async () => {
-  if (authStore.user?.role?.name !== 'editor') {
+  if (authStore.user?.role?.name !== 'Editor') {
     router.push('/')
     return
   }

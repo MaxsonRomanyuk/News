@@ -109,7 +109,9 @@ const fetchArticle = async () => {
 const fetchCategories = async () => {
   try {
     const response = await api.get('/categories')
-    categories.value = response.data
+    categories.value = response.data.data || response.data;
+
+    console.log('Processed categories for create:', categories.value);
   } catch (err) {
     console.error('Error fetching categories:', err)
   }
