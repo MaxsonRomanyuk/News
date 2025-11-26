@@ -256,13 +256,44 @@ const tags = computed(() =>
     .filter(tag => tag.length > 0)
 )
 
+const richTextToString = (richText: any[]): string => {
+  if (!Array.isArray(richText)) return ''
+  
+  return richText.map(item => {
+    if (item.type === 'paragraph' && Array.isArray(item.children)) {
+      return item.children.map((child: any) => child.text || '').join('')
+    }
+    return ''
+  }).join('\n\n')
+}
+
+const stringToRichText = (text: string): any[] => {
+  if (!text.trim()) return []
+  
+  return text.split('\n\n').map(paragraph => ({
+    type: 'paragraph',
+    children: [{ type: 'text', text: paragraph.trim() }]
+  })).filter(item => item.children[0].text.length > 0)
+}
+
 watch(() => props.article, (article) => {
   if (article) {
+    let contentString = ''
+    if (Array.isArray(article.attributes?.content)) {
+      contentString = richTextToString(article.attributes.content)
+    } else if (typeof article.attributes?.content === 'string') {
+      contentString = article.attributes.content
+    } else if (Array.isArray(article.content)) {
+      contentString = richTextToString(article.content)
+    } else if (typeof article.content === 'string') {
+      contentString = article.content
+    }
+
     formData.value = {
       title: article.title || '',
       slug: article.slug || '',
       excerpt: article.excerpt || '',
-      content: typeof article.content === 'string' ? article.content : '',
+      content: contentString,
       category: article.category?.id || article.category || '',
       readingTime: article.readingTime || 5,
       isFeatured: article.isFeatured || false,
@@ -302,11 +333,12 @@ const validateForm = (): boolean => {
 }
 
 const prepareSubmitData = () => {
+  const richTextContent = stringToRichText(formData.value.content.trim())
   const data: any = {
     title: formData.value.title.trim(),
     slug: formData.value.slug.trim(),
     excerpt: formData.value.excerpt.trim(),
-    content: formData.value.content.trim(),
+    content: richTextContent,
     category: formData.value.category,
     readingTime: formData.value.readingTime,
     isFeatured: formData.value.isFeatured,
@@ -321,6 +353,9 @@ const prepareSubmitData = () => {
     data.coverImage = formData.value.coverImage
   }
 
+  if (tags.value.length > 0) {
+    data.data.tags = tags.value
+  }
   return data
 }
 
