@@ -12,7 +12,7 @@
         <div class="header-content">
           <div class="article-meta">
             <span class="category-badge">{{ article.category?.name }}</span>
-            <span class="date">{{ formatDate(article.publishedDate || article.createdAt) }}</span>
+            <span class="date">{{ formatDate(article.publishDate || article.createdAt) }}</span>
             <span class="reading-time" v-if="article.readingTime">⏱️ {{ article.readingTime }} мин чтения</span>
             <span class="views">👁️ {{ article.views }} просмотров</span>
           </div>
@@ -175,7 +175,7 @@ const nextArticle = computed(() =>
 
 const fetchAllArticles = async () => {
   try {
-    const response = await api.get('/articles?populate=coverImage,category,author&sort=publishedAt:desc')
+    const response = await api.get('/articles?populate=coverImage,category,author&sort=publishDate:desc')
     allArticles.value = response.data
   } catch (err) {
     console.error('Error fetching articles for navigation:', err)

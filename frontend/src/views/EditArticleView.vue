@@ -159,7 +159,7 @@ const handleSaveDraft = async (articleData: any) => {
     const submitData = {
       data: {
         ...articleData,
-        publishedAt: null // Сбрасываем дату публикации для черновика
+        publishDate: null // Сбрасываем дату публикации для черновика
       }
     }
 

@@ -89,10 +89,10 @@
         </div>
 
         <div class="form-group">
-          <label for="publishedAt">Дата публикации</label>
+          <label for="publishDate">Дата публикации</label>
           <input
-            id="publishedAt"
-            v-model="formData.publishedAt"
+            id="publishDate"
+            v-model="formData.publishDate"
             type="datetime-local"
           >
         </div>
@@ -213,7 +213,7 @@ interface ArticleFormData {
   category: number | string
   readingTime: number
   isFeatured: boolean
-  publishedAt: string
+  publishDate: string
   tagsInput: string
   coverImage: any
 }
@@ -242,7 +242,7 @@ const formData = ref<ArticleFormData>({
   category: '',
   readingTime: 5,
   isFeatured: false,
-  publishedAt: '',
+  publishDate: '',
   tagsInput: '',
   coverImage: null
 })
@@ -289,6 +289,8 @@ watch(() => props.article, (article) => {
       contentString = article.content
     }
 
+    console.log("formdata: " + formData.value)
+
     formData.value = {
       title: article.title || '',
       slug: article.slug || '',
@@ -297,10 +299,11 @@ watch(() => props.article, (article) => {
       category: article.category?.id || article.category || '',
       readingTime: article.readingTime || 5,
       isFeatured: article.isFeatured || false,
-      publishedAt: article.publishedAt ? new Date(article.publishedAt).toISOString().slice(0, 16) : '',
+      publishDate: article.publishDate ? new Date(article.publishDate).toISOString().slice(0, 16) : '',
       tagsInput: Array.isArray(article.tags) ? article.tags.join(', ') : '',
       coverImage: article.coverImage || null
     }
+    console.log("formdata2: " + formData.title)
   }
 }, { immediate: true })
 
@@ -339,10 +342,10 @@ const prepareSubmitData = () => {
     slug: formData.value.slug.trim(),
     excerpt: formData.value.excerpt.trim(),
     content: richTextContent,
-    category: formData.value.category,
+    category: formData.value.category-1,
     readingTime: formData.value.readingTime,
     isFeatured: formData.value.isFeatured,
-    publishedAt: formData.value.publishedAt || new Date().toISOString()
+    publishDate: formData.value.publishDate || new Date().toISOString()
   }
 
   if (tags.value.length > 0) {
@@ -356,6 +359,7 @@ const prepareSubmitData = () => {
   if (tags.value.length > 0) {
     data.data.tags = tags.value
   }
+  console.log("data: " + data.publishedAt)
   return data
 }
 

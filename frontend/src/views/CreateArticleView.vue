@@ -69,7 +69,7 @@ const handleCreateArticle = async (articleData: any) => {
       data: {
         ...articleData,
         author: authStore.user?.id,
-        publishedAt: articleData.publishedAt || new Date().toISOString()
+        publishDate: articleData.publishDate || new Date().toISOString()
       }
     }
 

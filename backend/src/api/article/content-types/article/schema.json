@@ -59,7 +59,7 @@
       "target": "api::category.category",
       "inversedBy": "articles"
     },
-    "publishedDate": {
+    "publishDate": {
       "type": "datetime"
     }
   }
