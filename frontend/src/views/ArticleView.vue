@@ -206,11 +206,7 @@ const fetchArticle = async () => {
 
 const incrementViews = async (articleId: number) => {
   try {
-    await api.put(`/articles/${articleId}`, {
-      data: {
-        views: (article.value?.views || 0) + 1
-      }
-    })
+    await api.put(`/articles/${articleId}/increment-views`)
   } catch (err) {
     console.error('Error incrementing views:', err)
   }

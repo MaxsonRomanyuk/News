@@ -56,6 +56,15 @@ export default {
       },
     },
     {
+      method: 'PUT',
+      path: '/articles/:id/increment-views',
+      handler: 'article.incrementViews',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
       method: 'DELETE',
       path: '/articles/:id',
       handler: 'article.delete',

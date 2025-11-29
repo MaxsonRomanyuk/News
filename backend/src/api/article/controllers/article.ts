@@ -121,7 +121,33 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       return ctx.internalServerError('Error fetching featured articles');
     }
   },
+  async incrementViews(ctx: any) {
+  try {
+    const { id } = ctx.params;
 
+    const currentArticle: any = await strapi.entityService.findOne('api::article.article', parseInt(id), {
+      fields: ['views']
+    });
+
+    if (!currentArticle) {
+      return ctx.notFound('Article not found');
+    }
+
+
+    const updatedArticle = await strapi.entityService.update('api::article.article', parseInt(id), {
+      data: {
+        views: (currentArticle.views || 0) + 1
+      },
+      fields: ['views'] 
+    });
+
+    console.log(`👀 Views incremented for article ${id}: ${currentArticle.views} → ${updatedArticle.views}`);
+    return { success: true, views: updatedArticle.views };
+  } catch (err) {
+    console.error('Increment views error:', err);
+    return ctx.internalServerError('Error incrementing views');
+  }
+},
   async create(ctx: any) {
     try {
       const { data } = ctx.request.body;
@@ -195,7 +221,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
 
       // Проверка прав доступа - 403
       const isAuthor = existingArticle.author?.id === user.id;
-      const isEditor = user.role?.name === 'editor';
+      const isEditor = user.role?.name === 'Editor';
 
       if (!isAuthor && !isEditor) {
         return ctx.forbidden('You can only update your own articles');
