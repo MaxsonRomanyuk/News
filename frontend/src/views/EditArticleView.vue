@@ -1,7 +1,6 @@
 <template>
   <div class="edit-article-page">
     <div class="container">
-      <!-- Состояния загрузки -->
       <div v-if="articleLoading" class="loading-state">
         <div class="spinner"></div>
         <p>Загружаем статью...</p>
@@ -159,7 +158,7 @@ const handleSaveDraft = async (articleData: any) => {
     const submitData = {
       data: {
         ...articleData,
-        publishDate: null // Сбрасываем дату публикации для черновика
+        publishDate: null
       }
     }
 
@@ -181,7 +180,6 @@ const handleCancel = () => {
 }
 
 onMounted(async () => {
-  // Проверяем авторизацию
   if (!authStore.isAuthenticated) {
     router.push('/login')
     return

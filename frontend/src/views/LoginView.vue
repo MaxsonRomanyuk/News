@@ -59,17 +59,14 @@
               {{ authStore.loading ? 'Вход...' : 'Войти' }}
             </button>
 
-            <!-- Разделитель -->
             <div class="divider">
               <span>или</span>
             </div>
 
-            <!-- Ссылка на регистрацию -->
             <router-link to="/register" class="auth-switch-link">
               Нет аккаунта? <span>Зарегистрироваться</span>
             </router-link>
 
-            <!-- Дополнительные ссылки -->
             <div class="auth-links">
               <router-link to="/" class="back-link">
                 ← Вернуться на главную
@@ -104,7 +101,6 @@ const handleLogin = async () => {
     await authStore.login(form)
     router.push('/')
   } catch (error) {
-    // Ошибка уже обработана в store
     console.error('Login error:', error)
   }
 }

@@ -118,7 +118,7 @@ const handleRegister = async () => {
     await authStore.register(form)
     router.push('/')
   } catch (error) {
-    // Ошибка уже обработана в store
+
     console.error('Register error:', error)
   }
 }
