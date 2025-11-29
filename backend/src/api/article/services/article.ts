@@ -1,52 +1,27 @@
 'use strict';
 
-const slugify = require('slugify');
-
 module.exports = ({ strapi }) => ({
-  async create(params) {
-    // Генерация slug из title, если не указан
-    if (params.data.title && !params.data.slug) {
-      params.data.slug = slugify(params.data.title, { 
-        lower: true, 
-        strict: true,
-        locale: 'ru' // для русских букв
-      });
-    }
-    return await super.create(params);
-  },
+  async incrementViews(articleId) {
+    try {
+      const article = await strapi.entityService.findOne('api::article.article', articleId);
+      
+      if (article) {
 
-  async update(params) {
-    // Обновление slug при изменении title
-    if (params.data.title) {
-      params.data.slug = slugify(params.data.title, { 
-        lower: true, 
-        strict: true,
-        locale: 'ru'
-      });
+        const updatedArticle = await strapi.entityService.update('api::article.article', articleId, {
+          data: {
+            views: (article.views || 0) + 1
+          }
+        });
+        
+        console.log(`✅ Views incremented for article ${articleId}: ${article.views || 0} → ${updatedArticle.views}`);
+        return updatedArticle;
+      }
+      
+      throw new Error(`Article with id ${articleId} not found`);
+      
+    } catch (error) {
+      console.error('❌ Error incrementing views:', error);
+      throw error;
     }
-    return await super.update(params);
-  }
-});
-
-function calculateReadingTime(content) {
-  const wordsPerMinute = 200;
-  const text = content.replace(/<[^>]*>/g, ''); // Удаляем HTML теги
-  const wordCount = text.split(/\s+/).length;
-  return Math.ceil(wordCount / wordsPerMinute);
-}
-
-module.exports = ({ strapi }) => ({
-  async create(params) {
-    if (params.data.content) {
-      params.data.readingTime = calculateReadingTime(params.data.content);
-    }
-    return await super.create(params);
-  },
-
-  async update(params) {
-    if (params.data.content) {
-      params.data.readingTime = calculateReadingTime(params.data.content);
-    }
-    return await super.update(params);
   }
 });
