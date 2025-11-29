@@ -348,16 +348,12 @@ const prepareSubmitData = () => {
     publishDate: formData.value.publishDate || new Date().toISOString()
   }
 
-  if (tags.value.length > 0) {
-    data.tags = tags.value
-  }
-
   if (formData.value.coverImage) {
     data.coverImage = formData.value.coverImage
   }
 
   if (tags.value.length > 0) {
-    data.data.tags = tags.value
+    data.tags = tags.value
   }
   console.log("data: " + data.publishedAt)
   return data

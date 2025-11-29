@@ -265,7 +265,7 @@ const applyTagFilter = () => {
     } else {
       newsStore.setTagFilter([]);
     }
-  }, 1000); 
+  }, 600); 
 };
 
 
