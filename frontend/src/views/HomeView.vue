@@ -45,6 +45,16 @@
               </div>
 
               <div class="filter-group">
+                <input
+                  v-model="tagFilter"
+                  @input="applyTagFilter"
+                  placeholder="Фильтр по тегам..."
+                  class="tag-filter-input"
+                  type="text"
+                >
+              </div>
+
+              <div class="filter-group">
                 <label class="checkbox-filter">
                   <input 
                     type="checkbox" 
@@ -77,6 +87,10 @@
             <span v-if="newsStore.filters.isFeatured" class="filter-badge">
               Только избранные
               <button @click="removeFeaturedFilter" class="remove-filter">×</button>
+            </span>
+            <span v-if="newsStore.filters.tags.length > 0" class="filter-badge" v-for="tag in newsStore.filters.tags" :key="tag">
+               Тег: {{ tag }}
+              <button @click="removeTagFilter(tag)" class="remove-filter">×</button>
             </span>
           </div>
 
@@ -119,6 +133,11 @@
                 </div>
                 <h3 class="card-title">{{ article.attributes?.title || article.title }}</h3>
                 <p class="card-excerpt">{{ article.attributes?.excerpt || article.excerpt }}</p>
+                <div class="article-tags" v-if="getArticleTags(article).length > 0">
+                  <span v-for="tag in getArticleTags(article)" :key="tag" class="tag">
+                    {{ tag }}
+                  </span>
+                </div>
                 <div class="card-footer">
                   <div class="meta">
                     <span class="date">
@@ -191,6 +210,9 @@ const showFeaturedOnly = ref(false);
 
 const { articles, loading, error, pagination, hasArticles, currentPage, totalPages } = newsStore;
 
+const tagFilter = ref('');
+let tagFilterTimeout: NodeJS.Timeout | null = null;
+
 const featuredArticles = computed(() => {
   return newsStore.articles.filter(article => {
     const isFeatured = article.attributes?.isFeatured || article.isFeatured;
@@ -227,6 +249,55 @@ const fetchCategories = async () => {
     console.error('Error fetching categories:', err);
     console.error('Error details:', err.response?.data);
   }
+};
+
+const applyTagFilter = () => {
+  if (tagFilterTimeout) {
+    clearTimeout(tagFilterTimeout);
+  }
+  
+  tagFilterTimeout = setTimeout(() => {
+    console.log('🏷️ Applying tag filter:', tagFilter.value);
+    
+    if (tagFilter.value.trim()) {
+      const tags = tagFilter.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+      newsStore.setTagFilter(tags);
+    } else {
+      newsStore.setTagFilter([]);
+    }
+  }, 1000); 
+};
+
+
+const removeTagFilter = (tagToRemove: string) => {
+  console.log('❌ Removing tag filter:', tagToRemove);
+  const updatedTags = newsStore.filters.tags.filter(tag => tag !== tagToRemove);
+  newsStore.setTagFilter(updatedTags);
+  
+  if (updatedTags.length === 0) {
+    tagFilter.value = '';
+  }
+};
+
+const getArticleTags = (article: any): string[] => {
+  const tags = article.attributes?.tags || article.tags;
+  
+  if (Array.isArray(tags)) {
+    return tags;
+  }
+  
+  if (typeof tags === 'string') {
+    try {
+      const parsedTags = JSON.parse(tags);
+      if (Array.isArray(parsedTags)) {
+        return parsedTags;
+      }
+    } catch (e) {
+      return tags ? [tags] : [];
+    }
+  }
+  
+  return [];
 };
 
 const applyCategoryFilter = () => {
@@ -603,7 +674,32 @@ onMounted(async () => {
   display: flex;
   align-items: center;
 }
+.tag-filter-input {
+  padding: 10px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  min-width: 200px;
+}
 
+.tag-filter-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+.article-tags {
+  margin: 10px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.tag {
+  background: #e9ecef;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: #666;
+}
 .category-filter {
   padding: 10px 15px;
   border: 2px solid #e9ecef;
