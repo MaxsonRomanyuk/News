@@ -1,24 +1,21 @@
-'use strict';
-
-module.exports = {
-  async afterFindOne(event) {
-    const { result } = event;
-    
-    if (result && result.id) {
-      try {
-        const shouldIncrement = result.publishDate && 
-                              !event.params?.filters?.id?.$in && 
-                              !event.params?.pagination;
-        
-        if (shouldIncrement) {
-          console.log(`🔍 Incrementing views for article: ${result.title}`);
-
-          await strapi.service('api::article.article').incrementViews(result.id);
-        }
-      } catch (error) {
-        console.error('❌ Error in afterFindOne lifecycle:', error);
-
-      }
+export default {
+  async beforeCreate(event) {
+    const { data } = event.params;
+    if (data.content) {
+      data.readingTime = calculateReadingTime(data.content);
     }
   },
+
+  async beforeUpdate(event) {
+    const { data } = event.params;
+    if (data.content) {
+      data.readingTime = calculateReadingTime(data.content);
+    }
+  }
 };
+
+function calculateReadingTime(content: string): number {
+  const wordsPerMinute = 200;
+  const wordCount = content.split(/\s+/).length;
+  return Math.ceil(wordCount / wordsPerMinute);
+}

@@ -43,7 +43,22 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       ctx.throw(500, err);
     }
   },
-async create(ctx: any) {
+  async findFeatured(ctx: any) {
+    try {
+      console.log('🎯 Featured endpoint called!', new Date().toISOString());
+      const entities = await strapi.entityService.findMany('api::article.article', {
+        filters: { isFeatured: true},
+        populate: ['coverImage', 'category', 'author'],
+        sort: { publishedAt: 'desc' },
+        ...ctx.query
+      });
+    console.log(`✅ Found ${entities.length} featured articles`);
+    return entities;
+  } catch (err) {
+    ctx.throw(500, err);
+  }
+  },
+  async create(ctx: any) {
     try {
       const entity = await strapi.entityService.create('api::article.article', {
         ...ctx.request.body,
@@ -82,7 +97,7 @@ async create(ctx: any) {
     try {
       const { id } = ctx.params;
       const entity = await strapi.entityService.update('api::article.article', id, {
-        data: { publishedAt: new Date() },
+        data: { publishDate: new Date() },
         populate: ['coverImage', 'category', 'author'],
       });
       return entity;
@@ -95,7 +110,7 @@ async create(ctx: any) {
     try {
       const { id } = ctx.params;
       const entity = await strapi.entityService.update('api::article.article', id, {
-        data: { publishedAt: null },
+        data: { publishDate: null },
         populate: ['coverImage', 'category', 'author'],
       });
       return entity;

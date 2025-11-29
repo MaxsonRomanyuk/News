@@ -192,8 +192,7 @@ const fetchArticle = async () => {
     
     if (response.data.length > 0) {
       article.value = response.data[0]
-      await incrementViews(response.data[0].id)
-
+       await incrementViews(response.data[0].id)
     } else {
       error.value = 'Статья не найдена'
     }

@@ -159,7 +159,6 @@
         </div>
       </div>
     </section>
-
     <section class="form-actions">
       <button
         type="button"
@@ -303,7 +302,7 @@ watch(() => props.article, (article) => {
       tagsInput: Array.isArray(article.tags) ? article.tags.join(', ') : '',
       coverImage: article.coverImage || null
     }
-    console.log("formdata2: " + formData.title)
+
   }
 }, { immediate: true })
 

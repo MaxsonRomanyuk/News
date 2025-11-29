@@ -1,6 +1,5 @@
 export default {
   routes: [
-    // GET маршруты (уже есть)
     {
       method: 'GET',
       path: '/articles',
@@ -28,9 +27,15 @@ export default {
         middlewares: [],
       },
     },
-    
-    // ДОБАВЬТЕ ЭТИ МАРШРУТЫ:
-    // POST маршрут - создание
+    {
+      method: 'GET',
+      path: '/articles/featured',
+      handler: 'article.findFeatured',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
     {
       method: 'POST',
       path: '/articles',
@@ -40,7 +45,7 @@ export default {
         middlewares: [],
       },
     },
-    // PUT маршрут - обновление
+
     {
       method: 'PUT',
       path: '/articles/:id',
@@ -50,7 +55,6 @@ export default {
         middlewares: [],
       },
     },
-    // DELETE маршрут - удаление
     {
       method: 'DELETE',
       path: '/articles/:id',
@@ -60,7 +64,6 @@ export default {
         middlewares: [],
       },
     },
-    // Publish маршрут - публикация (для Draft & Publish)
     {
       method: 'POST',
       path: '/articles/:id/publish',
@@ -70,7 +73,6 @@ export default {
         middlewares: [],
       },
     },
-    // Unpublish маршрут - снятие с публикации
     {
       method: 'POST',
       path: '/articles/:id/unpublish',
