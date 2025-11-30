@@ -126,9 +126,9 @@ const handleUpdateArticle = async (articleData: any) => {
       data: articleData
     }
 
-    await api.put(`/articles/${article.value.id}`, submitData)
+    await api.post(`/articles/${article.value.id}/publish`, submitData)
     
-    successMessage.value = 'Статья успешно обновлена!'
+    successMessage.value = 'Статья успешно опубликована!'
     
     Object.assign(article.value, articleData)
 

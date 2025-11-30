@@ -45,6 +45,24 @@ const generateSlug = (title: string): string => {
     .substring(0, 100);
 };
 
+const logAudit = async (action: string, entityId: number, user: any, ctx: any, additionalDetails: any = {}) => {
+  try {
+    await strapi.service('api::audit-log.audit-log').log(
+      action,
+      'article',
+      entityId,
+      user,
+      {
+        ...additionalDetails,
+        ipAddress: ctx.request.ip,
+        userAgent: ctx.request.get('user-agent')
+      }
+    );
+  } catch (error) {
+    console.error('Audit logging failed:', error);
+  }
+};
+
 export default ({ strapi }: { strapi: Core.Strapi }) => ({
   async find(ctx: any) {
     try {
@@ -280,7 +298,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
 
       // Проверка прав доступа - 403
       const isAuthor = existingArticle.author?.id === user.id;
-      const isEditor = user.role?.name === 'editor';
+      const isEditor = user.role?.name === 'Editor';
 
       if (!isAuthor && !isEditor) {
         return ctx.forbidden('You can only delete your own articles');
@@ -288,6 +306,10 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
 
       const entity = await strapi.entityService.delete('api::article.article', parseInt(id));
       
+      await logAudit('DELETE', parseInt(id), user, ctx, {
+        articleTitle: existingArticle.title
+      });
+
       console.log(`🗑 Article "${existingArticle.title}" deleted by user ${user.id}`);
       return entity;
     } catch (err) {
@@ -307,7 +329,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       }
 
       // Проверка прав (только editor) - 403
-      if (user.role?.name !== 'editor') {
+      if (user.role?.name !== 'Editor') {
         return ctx.forbidden('Only editors can publish articles');
       }
 
@@ -319,6 +341,10 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       const entity = await strapi.entityService.update('api::article.article', parseInt(id), {
         data: { publishedAt: new Date() },
         populate: ['coverImage', 'category', 'author'],
+      });
+
+      await logAudit('PUBLISH', parseInt(id), user, ctx, {
+        articleTitle: entity.title
       });
 
       return entity;
@@ -339,7 +365,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       }
 
       // Проверка прав (только editor) - 403
-      if (user.role?.name !== 'editor') {
+      if (user.role?.name !== 'Editor') {
         return ctx.forbidden('Only editors can unpublish articles');
       }
 
@@ -351,6 +377,10 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       const entity = await strapi.entityService.update('api::article.article', parseInt(id), {
         data: { publishedAt: null },
         populate: ['coverImage', 'category', 'author'],
+      });
+
+      await logAudit('UNPUBLISH', parseInt(id), user, ctx, {
+        articleTitle: entity.title
       });
 
       return entity;

@@ -176,9 +176,17 @@
           class="btn-primary"
         >
           <span v-if="loading" class="btn-spinner"></span>
-          {{ loading ? 'Сохранение...' : (isEditing ? 'Обновить статью' : 'Опубликовать статью') }}
+          {{ loading ? 'Сохранение...' : (isEditing ? 'Обновить статью' : 'Создать статью') }}
         </button>
-        
+        <button
+          v-if="isEditing"
+          type="button"
+          @click="handlePublish"
+          :disabled="loading"
+          class="btn-outline"
+        >
+          Сохранить черновик
+        </button>
         <button
           v-if="isEditing"
           type="button"
@@ -363,6 +371,10 @@ const handleSubmit = () => {
   
   const submitData = prepareSubmitData()
   emit('submit', submitData)
+}
+
+const handlePublish = () => {
+  
 }
 
 const handleSaveDraft = () => {

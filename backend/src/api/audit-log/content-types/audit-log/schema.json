@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "audit_logs",
+  "info": {
+    "singularName": "audit-log",
+    "pluralName": "audit-logs",
+    "displayName": "AuditLog",
+    "description": "Audit log for tracking user actions"
+  },
+  "options": {
+    "draftAndPublish": false,
+    "timestamps": true
+  },
+  "attributes": {
+    "action": {
+      "type": "string",
+      "required": true,
+      "maxLength": 50
+    },
+    "entity": {
+      "type": "string",
+      "required": true,
+      "maxLength": 50
+    },
+    "entityId": {
+      "type": "integer"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "details": {
+      "type": "json"
+    },
+    "ipAddress": {
+      "type": "string",
+      "maxLength": 45
+    },
+    "userAgent": {
+      "type": "string"
+    }
+  }
+}
