@@ -377,11 +377,8 @@ const handleCoverUpload = (event: Event) => {
   const file = target.files?.[0]
   
   if (file) {
-    // Здесь будет логика загрузки файла в Strapi
-    // Пока просто сохраняем файл
     formData.value.coverImage = file
     
-    // Сбрасываем input чтобы можно было загрузить тот же файл снова
     target.value = ''
   }
 }
@@ -405,13 +402,13 @@ const getFormData = () => {
 }
 
 const validateFormExternal = () => {
-  return validateForm() // ← вызываем существующий метод validateForm
+  return validateForm() 
 }
 
-// Экспортируем методы для использования через ref
+
 defineExpose({
   getFormData,
-  validateForm: validateFormExternal // ← переименовали чтобы избежать конфликта
+  validateForm: validateFormExternal
 })
 </script>
 
@@ -495,7 +492,6 @@ textarea {
   margin-top: 5px;
 }
 
-/* Чекбокс */
 .checkbox-group {
   margin-top: 25px;
 }

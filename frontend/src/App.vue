@@ -306,7 +306,7 @@ const goToCreateArticle = () => {
 .app-main {
   flex: 1;
   width: 100%;
-  min-height: calc(100vh - 120px); /* Высота минус навигация и футер */
+  min-height: calc(100vh - 120px); 
 }
 
 .main-footer {
