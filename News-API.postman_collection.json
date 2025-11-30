@@ -1,0 +1,162 @@
+{
+  "info": {
+    "name": "News Website API",
+    "description": "Полная документация API для новостного сайта на Strapi",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:1337/api",
+      "type": "string"
+    },
+    {
+      "key": "jwtToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Аутентификация",
+      "item": [
+        {
+          "name": "Регистрация",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/local/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "local", "register"]
+            }
+          }
+        },
+        {
+          "name": "Вход в систему",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"editor@mail.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/local",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "local"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📰 Статьи",
+      "item": [
+        {
+          "name": "Получить все статьи",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/articles?populate=coverImage,category,author&sort=publishedAt:desc&pagination[page]=1&pagination[pageSize]=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["articles"],
+              "query": [
+                {
+                  "key": "populate",
+                  "value": "coverImage,category,author"
+                },
+                {
+                  "key": "sort",
+                  "value": "publishedAt:desc"
+                },
+                {
+                  "key": "pagination[page]",
+                  "value": "1"
+                },
+                {
+                  "key": "pagination[pageSize]",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Создать статью",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"title\": \"Тестовая статья\",\n    \"slug\": \"test-article\",\n    \"content\": \"Содержимое тестовой статьи\",\n    \"excerpt\": \"Краткое описание\",\n    \"category\": 1,\n    \"isFeatured\": false,\n    \"readingTime\": 3\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/articles",
+              "host": ["{{baseUrl}}"],
+              "path": ["articles"]
+            }
+          }
+        },
+        {
+          "name": "Опубликовать статью",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/articles/1/publish",
+              "host": ["{{baseUrl}}"],
+              "path": ["articles", "1", "publish"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🗂️ Категории",
+      "item": [
+        {
+          "name": "Получить все категории",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
