@@ -9,7 +9,7 @@ export const useNewsStore = defineStore('news', () => {
   const error = ref<string | null>(null);
   const pagination = ref({
     page: 1,
-    pageSize: 5,
+    pageSize: 6,
     pageCount: 0,
     total: 0
   });

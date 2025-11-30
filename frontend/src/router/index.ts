@@ -57,7 +57,7 @@ router.beforeEach((to, from, next) => {
     return
   }
   
-  if (to.meta.requiresEditor && authStore.user?.role?.name !== 'Editor') {
+  if (to.meta.requiresEditor && (authStore.user?.role?.name !== 'Editor' && authStore.user?.role?.name !== 'Authenticated')) {
     next('/')
     return
   }

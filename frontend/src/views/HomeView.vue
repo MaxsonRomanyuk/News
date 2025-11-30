@@ -101,7 +101,7 @@
 
           <div v-else-if="newsStore.error" class="error-state">
             <p>😞 {{ newsStore.error }}</p>
-            <button @click="fetchArticles(1)" class="retry-btn">Попробовать снова</button>
+            <button @click="newsStore.fetchArticles(1)" class="retry-btn">Попробовать снова</button>
           </div>
 
           <div v-else-if="!newsStore.hasArticles" class="empty-state">
@@ -116,23 +116,23 @@
               v-for="article in newsStore.articles" 
               :key="article.id" 
               class="article-card"
-              @click="goToArticle(article.attributes?.slug || article.slug, article.attributes?.isFeatured || article.isFeatured)"
+              @click="goToArticle(article.slug)"
             >
-              <div class="card-image" v-if="article.attributes?.coverImage || article.coverImage">
-                <img :src="getImageUrl(article.attributes?.coverImage || article.coverImage)" :alt="article.attributes?.title || article.title">
-                <span v-if="article.attributes?.isFeatured || article.isFeatured" class="featured-badge">Избранное</span>
+              <div class="card-image" v-if="article.coverImage">
+                <img :src="getImageUrl(article.coverImage)" :alt="article.title">
+                <span v-if="article.isFeatured" class="featured-badge">Избранное</span>
               </div>
               <div class="card-content">
                 <div class="card-header">
                   <span class="category">
-                    {{ article.attributes?.category?.data?.attributes?.name || article.attributes?.category?.name || article.category?.name }}
+                    {{ article.category?.name }}
                   </span>
-                  <span class="reading-time" v-if="article.attributes?.readingTime || article.readingTime">
-                    {{ article.attributes?.readingTime || article.readingTime }} мин
+                  <span class="reading-time" v-if="article.readingTime">
+                    {{ article.readingTime }} мин
                   </span>
                 </div>
-                <h3 class="card-title">{{ article.attributes?.title || article.title }}</h3>
-                <p class="card-excerpt">{{ article.attributes?.excerpt || article.excerpt }}</p>
+                <h3 class="card-title">{{ article.title }}</h3>
+                <p class="card-excerpt">{{ article.excerpt }}</p>
                 <div class="article-tags" v-if="getArticleTags(article).length > 0">
                   <span v-for="tag in getArticleTags(article)" :key="tag" class="tag">
                     {{ tag }}
@@ -143,7 +143,7 @@
                     <span class="date">
                       {{ formatDate(article.attributes?.publishDate || article.attributes?.publishedAt || article.publishDate) }}
                     </span>
-                    <span class="views">👁️ {{ article.attributes?.views || article.views || 0 }}</span>
+                    <span class="views">👁️ {{ article.views || 0 }}</span>
                   </div>
                   <button class="read-more">Читать →</button>
                 </div>
@@ -346,8 +346,7 @@ const formatDate = (dateString: string): string => {
   });
 };
 
-const goToArticle = (slug: string, isFeatured: bool) => {
-  console.log(isFeatured);
+const goToArticle = (slug: string) => {
   router.push(`/article/${slug}`);
 
 };

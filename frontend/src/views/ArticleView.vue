@@ -48,7 +48,6 @@
     <main class="article-content" v-if="article">
       <div class="container">
         <div class="content-wrapper">
-          <!-- Боковая панель с действиями -->
           <aside class="sidebar-actions">
             <div class="action-group">
               <button class="action-btn" @click="shareArticle" title="Поделиться">
@@ -61,7 +60,7 @@
                 <span class="action-text">{{ isBookmarked ? 'В закладках' : 'В закладки' }}</span>
               </button>
               
-              <div class="editor-actions" v-if="authStore.user?.role?.name === 'Editor'">
+              <div class="editor-actions" v-if="canEditOrDelete">
                 <button class="action-btn edit-btn" @click="editArticle" title="Редактировать">
                   <span class="action-icon">✏️</span>
                   <span class="action-text">Редактировать</span>
@@ -173,6 +172,16 @@ const nextArticle = computed(() =>
   hasNextArticle.value ? allArticles.value[currentArticleIndex.value + 1] : null
 )
 
+const canEditOrDelete = computed(() => {
+  if (!authStore.user || !article.value) return false
+  
+  const userRole = authStore.user.role?.name
+  const isEditor = userRole === 'Editor'
+  const isAuthor = article.value.author?.id === authStore.user.id
+
+  return isEditor || isAuthor
+})
+
 const fetchAllArticles = async () => {
   try {
     const response = await api.get('/articles?populate=coverImage,category,author&sort=publishDate:desc')
@@ -253,10 +262,22 @@ const deleteArticle = async () => {
   try {
     await api.delete(`/articles/${article.value.id}`)
     showDeleteModal.value = false
+    alert('Статья успешно удалена!')
     router.push('/')
   } catch (err: any) {
     console.error('Error deleting article:', err)
-    error.value = 'Не удалось удалить статью'
+
+    if (err.response?.status === 403) {
+      error.value = 'У вас нет прав для удаления этой статьи'
+    } else if (err.response?.status === 404) {
+      error.value = 'Статья не найдена'
+    } else if (err.response?.status === 401) {
+      error.value = 'Необходимо авторизоваться'
+      router.push('/login')
+    } else {
+      error.value = 'Не удалось удалить статью. Пожалуйста, попробуйте позже.'
+    }
+    showDeleteModal.value = false
   }
 }
 

@@ -178,15 +178,7 @@
           <span v-if="loading" class="btn-spinner"></span>
           {{ loading ? 'Сохранение...' : (isEditing ? 'Обновить статью' : 'Создать статью') }}
         </button>
-        <button
-          v-if="isEditing"
-          type="button"
-          @click="handlePublish"
-          :disabled="loading"
-          class="btn-outline"
-        >
-          Сохранить черновик
-        </button>
+        
         <button
           v-if="isEditing"
           type="button"
@@ -373,10 +365,6 @@ const handleSubmit = () => {
   emit('submit', submitData)
 }
 
-const handlePublish = () => {
-  
-}
-
 const handleSaveDraft = () => {
   if (!validateForm()) return
   
@@ -411,6 +399,20 @@ const getImageUrl = (coverImage: any): string => {
   }
   return ''
 }
+
+const getFormData = () => {
+  return prepareSubmitData()
+}
+
+const validateFormExternal = () => {
+  return validateForm() // ← вызываем существующий метод validateForm
+}
+
+// Экспортируем методы для использования через ref
+defineExpose({
+  getFormData,
+  validateForm: validateFormExternal // ← переименовали чтобы избежать конфликта
+})
 </script>
 
 <style scoped>

@@ -15,14 +15,21 @@
       </header>
 
       <ArticleForm
+        ref="articleFormRef"
         :categories="categories"
         :loading="loading"
         @submit="handleCreateArticle"
         @cancel="handleCancel"
       />
-
-      <div v-if="successMessage" class="success-message">
-        ✅ {{ successMessage }}
+      <<div v-if="authStore.user?.role?.name === 'Editor'" class="publish-section">
+        <button 
+          @click="handleCreateAndPublish" 
+          :disabled="loading"
+          class="btn-publish"
+        >
+          🚀 Создать и опубликовать
+        </button>
+        <p class="publish-hint">Статья будет сразу опубликована и доступна всем пользователям</p>
       </div>
 
       <div v-if="error" class="error-message">
@@ -41,6 +48,8 @@ import api from '@/services/api'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+const articleFormRef = ref<InstanceType<typeof ArticleForm>>()
 
 const categories = ref<any[]>([])
 const loading = ref(false)
@@ -69,16 +78,17 @@ const handleCreateArticle = async (articleData: any) => {
       data: {
         ...articleData,
         author: authStore.user?.id,
-        publishDate: articleData.publishDate || new Date().toISOString()
+        publishDate: articleData.publishDate || new Date().toISOString(),
+        publishedAt: null
       }
     }
 
     const response = await api.post('/articles', submitData)
     
-    successMessage.value = 'Статья успешно создана!'
+    successMessage.value = 'Статья успешно создана как черновик!'
 
     setTimeout(() => {
-      router.push(`/article/${response.data.data.attributes.slug}`)
+      router.push(`/article/${response.data.slug}`)
     }, 2000)
 
   } catch (err: any) {
@@ -99,15 +109,70 @@ const handleCreateArticle = async (articleData: any) => {
   }
 }
 
+const handleCreateAndPublish = async () => {
+  if (!articleFormRef.value) {
+    error.value = 'Форма не загружена'
+    return
+  }
+
+  loading.value = true
+  error.value = ''
+  successMessage.value = ''
+
+  try {
+    const formData = articleFormRef.value.getFormData()
+    
+    if (!articleFormRef.value.validateForm()) {
+      error.value = 'Пожалуйста, заполните все обязательные поля правильно'
+      loading.value = false
+      return
+    }
+
+    const submitData = {
+      data: {
+        ...formData,
+        author: authStore.user?.id,
+        publishDate: formData.publishDate || new Date().toISOString(),
+        publishedAt: new Date().toISOString()
+      }
+    }
+
+    const response = await api.post('/articles', submitData)
+    
+    successMessage.value = 'Статья создана и опубликована!'
+
+    setTimeout(() => {
+      const articleSlug = response.data.data?.attributes?.slug || response.data.slug
+      router.push(`/article/${articleSlug}`)
+    }, 2000)
+
+  } catch (err: any) {
+    console.error('Error creating and publishing article:', err)
+    
+    if (err.response?.data?.error?.message) {
+      error.value = err.response.data.error.message
+    } else if (err.response?.data?.error?.details?.errors) {
+      const validationErrors = err.response.data.error.details.errors
+      error.value = Object.values(validationErrors)
+        .map((error: any) => error.message)
+        .join(', ')
+    } else {
+      error.value = 'Не удалось создать и опубликовать статью'
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
 const handleCancel = () => {
   router.push('/')
 }
 
 onMounted(async () => {
-  if (authStore.user?.role?.name !== 'Editor') {
-    router.push('/')
-    return
-  }
+  // if (authStore.user?.role?.name !== 'Editor') {
+  //   router.push('/')
+  //   return
+  // }
   
   await fetchCategories()
 })
@@ -168,7 +233,41 @@ onMounted(async () => {
   font-size: 1.1rem;
   color: #666;
 }
+.publish-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 2px dashed #e9ecef;
+  border-radius: 8px;
+  text-align: center;
+  background: #f8f9fa;
+}
 
+.btn-publish {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: #28a745 0.3s;
+}
+
+.btn-publish:hover:not(:disabled) {
+  background: #218838;
+}
+
+.btn-publish:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.publish-hint {
+  margin-top: 0.5rem;
+  color: #6c757d;
+  font-size: 0.875rem;
+}
 .success-message {
   background: #d4edda;
   color: #155724;

@@ -40,7 +40,17 @@
           @save-draft="handleSaveDraft"
           @cancel="handleCancel"
         />
-
+        <div v-if="authStore.user?.role?.name === 'Editor' && article && !article.publishedAt" 
+           class="publish-section">
+          <button 
+            @click="handlePublishArticle" 
+            :disabled="formLoading"
+            class="btn-publish"
+          >
+            Опубликовать статью
+          </button>
+          <p class="publish-hint">Статья будет доступна всем пользователям</p>
+        </div>
         <div v-if="successMessage" class="success-message">
           ✅ {{ successMessage }}
         </div>
@@ -126,9 +136,11 @@ const handleUpdateArticle = async (articleData: any) => {
       data: articleData
     }
 
-    await api.post(`/articles/${article.value.id}/publish`, submitData)
-    
-    successMessage.value = 'Статья успешно опубликована!'
+    await api.put(`/articles/${article.value.id}`, submitData)
+
+    //await api.post(`/articles/${article.value.id}/publish`)
+
+    successMessage.value = 'Статья успешно обновлена'
     
     Object.assign(article.value, articleData)
 
@@ -149,7 +161,30 @@ const handleUpdateArticle = async (articleData: any) => {
     formLoading.value = false
   }
 }
+const handlePublishArticle = async () => {
+  if (!article.value) return
+  
+  formLoading.value = true
+  formError.value = ''
 
+  try {
+    await api.post(`/articles/${article.value.id}/publish`)
+    successMessage.value = 'Статья успешно опубликована!'
+    
+    await fetchArticle()
+
+  } catch (err: any) {
+    console.error('Error publishing article:', err)
+    
+    if (err.response?.data?.error?.message) {
+      formError.value = err.response.data.error.message
+    } else {
+      formError.value = 'Не удалось опубликовать статью'
+    }
+  } finally {
+    formLoading.value = false
+  }
+}
 const handleSaveDraft = async (articleData: any) => {
   formLoading.value = true
   formError.value = ''
@@ -295,7 +330,40 @@ onMounted(async () => {
   text-decoration: none;
   font-weight: 500;
 }
+.publish-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 2px dashed #e9ecef;
+  border-radius: 8px;
+  text-align: center;
+}
 
+.btn-publish {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: #28a745 0.3s;
+}
+
+.btn-publish:hover:not(:disabled) {
+  background: #218838;
+}
+
+.btn-publish:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.publish-hint {
+  margin-top: 0.5rem;
+  color: #6c757d;
+  font-size: 0.875rem;
+}
 .success-message {
   background: #d4edda;
   color: #155724;

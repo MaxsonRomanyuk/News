@@ -323,13 +323,19 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       const { id } = ctx.params;
       const user = ctx.state.user;
 
+      
       // Валидация авторизации - 401
       if (!user) {
         return ctx.unauthorized('Authentication required');
       }
 
-      // Проверка прав (только editor) - 403
-      if (user.role?.name !== 'Editor') {
+      const existingArticle: any = await strapi.entityService.findOne('api::article.article', parseInt(id), {
+        populate: ['author']
+      });
+
+      const isAuthor = existingArticle.author?.id === user.id;
+      const isEditor = user.role?.name === 'Editor';
+      if (!isAuthor && !isEditor) {
         return ctx.forbidden('Only editors can publish articles');
       }
 
@@ -339,7 +345,9 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       }
 
       const entity = await strapi.entityService.update('api::article.article', parseInt(id), {
-        data: { publishedAt: new Date() },
+        data: { 
+          publishedAt: new Date().toISOString() 
+        },
         populate: ['coverImage', 'category', 'author'],
       });
 
