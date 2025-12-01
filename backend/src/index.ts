@@ -1,20 +1,34 @@
-// import type { Core } from '@strapi/strapi';
+export interface Article {
+  id: number;
+  title: string;
+  slug: string;
+  content: any;
+  excerpt?: string;
+  views: number;
+  isFeatured: boolean;
+  readingTime?: number;
+  tags?: string[];
+  publishDate?: string;
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  coverImage?: any;
+  category?: any;
+  author?: {
+    id: number;
+    username: string;
+    email: string;
+  };
+}
 
-export default {
-  /**
-   * An asynchronous register function that runs before
-   * your application is initialized.
-   *
-   * This gives you an opportunity to extend code.
-   */
-  register(/* { strapi }: { strapi: Core.Strapi } */) {},
-
-  /**
-   * An asynchronous bootstrap function that runs before
-   * your application gets started.
-   *
-   * This gives you an opportunity to set up your data model,
-   * run jobs, or perform some special logic.
-   */
-  bootstrap(/* { strapi }: { strapi: Core.Strapi } */) {},
-};
+export interface StrapiUser {
+  id: number;
+  username: string;
+  email: string;
+  role: {
+    id: number;
+    name: string;
+    description: string;
+    type: string;
+  };
+}

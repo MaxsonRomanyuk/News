@@ -27,5 +27,69 @@ export default {
         middlewares: [],
       },
     },
+    {
+      method: 'GET',
+      path: '/articles/featured',
+      handler: 'article.findFeatured',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/articles',
+      handler: 'article.create',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+
+    {
+      method: 'PUT',
+      path: '/articles/:id',
+      handler: 'article.update',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'PUT',
+      path: '/articles/:id/increment-views',
+      handler: 'article.incrementViews',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'DELETE',
+      path: '/articles/:id',
+      handler: 'article.delete',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/articles/:id/publish',
+      handler: 'article.publish',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/articles/:id/unpublish',
+      handler: 'article.unpublish',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };

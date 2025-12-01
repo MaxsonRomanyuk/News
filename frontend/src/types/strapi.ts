@@ -1,13 +1,17 @@
+export interface StrapiPagination {
+  page: number;
+  pageSize: number;
+  pageCount: number;
+  total: number;
+}
+
+export interface StrapiMeta {
+  pagination: StrapiPagination;
+}
+
 export interface StrapiResponse<T> {
   data: T;
-  meta: {
-    pagination: {
-      page: number;
-      pageSize: number;
-      pageCount: number;
-      total: number;
-    };
-  };
+  meta?: StrapiMeta;
 }
 
 export interface StrapiEntity<T> {
@@ -15,30 +19,48 @@ export interface StrapiEntity<T> {
   attributes: T;
 }
 
+export interface StrapiImageFormat {
+  name: string;
+  hash: string;
+  ext: string;
+  mime: string;
+  path: string | null;
+  width: number;
+  height: number;
+  size: number;
+  url: string;
+}
+
+export interface StrapiImageAttributes {
+  name: string;
+  alternativeText: string | null;
+  caption: string | null;
+  width: number;
+  height: number;
+  formats: {
+    thumbnail?: StrapiImageFormat;
+    small?: StrapiImageFormat;
+    medium?: StrapiImageFormat;
+    large?: StrapiImageFormat;
+  };
+  hash: string;
+  ext: string;
+  mime: string;
+  size: number;
+  url: string;
+  previewUrl: string | null;
+  provider: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface StrapiImage {
   data: {
     id: number;
-    attributes: {
-      name: string;
-      alternativeText: string | null;
-      caption: string | null;
-      width: number;
-      height: number;
-      formats: any;
-      hash: string;
-      ext: string;
-      mime: string;
-      size: number;
-      url: string;
-      previewUrl: string | null;
-      provider: string;
-      createdAt: string;
-      updatedAt: string;
-    };
+    attributes: StrapiImageAttributes;
   } | null;
 }
 
-// Типы для наших моделей
 export interface Category {
   name: string;
   slug: string;
@@ -50,23 +72,25 @@ export interface Author {
 }
 
 export interface Article {
+  id: number;
+  documentId: string;
   title: string;
   slug: string;
-  content: string;
+  content: any[]; // Rich text content
   excerpt: string;
-  publishedAt: string;
-  coverImage: StrapiImage;
   views: number;
   isFeatured: boolean;
   readingTime?: number;
-  tags?: string[];
-  category: {
-    data: StrapiEntity<Category>;
-  };
-  author: {
-    data: StrapiEntity<Author>;
-  };
+  tags?: string[] | null;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+  publishedDate: string;
+  locale: string | null;
+  coverImage: any; // Упростим для начала
+  category: any;
+  author: any;
 }
 
-export type ArticleEntity = StrapiEntity<Article>;
+export type ArticleEntity = Article;
 export type ArticleResponse = StrapiResponse<ArticleEntity[]>;
