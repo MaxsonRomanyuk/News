@@ -8,6 +8,16 @@ interface BlocksNode {
   children?: BlocksTextChild[];
 }
 
+const generateSlug = (text: string): string => {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\u0400-\u04FF\s-]/g, '') 
+    .replace(/\s+/g, '-')                   
+    .replace(/--+/g, '-')                   
+    .trim()
+    .substring(0, 100);                     
+};
+
 const extractTextFromBlocks = (blocks: BlocksNode[]): string => {
   if (!blocks || !Array.isArray(blocks)) return '';
   
@@ -49,6 +59,10 @@ const calculateReadingTime = (content: any): number => {
 export default {
   async beforeCreate(event: any) {
     const { data } = event.params;
+    if (data.title && !data.slug) {
+      data.slug = generateSlug(data.title);
+    }
+
     if (data.content) {
       data.readingTime = calculateReadingTime(data.content);
     }
@@ -56,6 +70,11 @@ export default {
 
   async beforeUpdate(event: any) {
     const { data } = event.params;
+
+    if (data.title && !data.slug) {
+      data.slug = generateSlug(data.title);
+    }
+
     if (data.content) {
       data.readingTime = calculateReadingTime(data.content);
     }
