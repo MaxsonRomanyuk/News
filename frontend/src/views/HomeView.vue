@@ -118,8 +118,8 @@
               class="article-card"
               @click="goToArticle(article.slug)"
             >
-              <div class="card-image" v-if="article.coverImage">
-                <img :src="getImageUrl(article.coverImage)" :alt="article.title">
+              <div class="card-image" >
+                <img v-if="article.coverImage":src="getImageUrl(article.coverImage)" :alt="article.title" >
                 <span v-if="article.isFeatured" class="featured-badge">Избранное</span>
               </div>
               <div class="card-content">
