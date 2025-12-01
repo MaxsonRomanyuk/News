@@ -7,20 +7,18 @@ export default ({ strapi }) => ({
         return ctx.unauthorized('Not authenticated');
       }
       
-      // Получаем пользователя с populate role
       const userWithRole = await strapi.entityService.findOne(
         'plugin::users-permissions.user',
         user.id,
         {
           populate: {
             role: {
-              fields: ['id', 'name', 'description', 'type'] // Явно указываем поля
+              fields: ['id', 'name', 'description', 'type'] 
             }
           }
         }
       );
       
-      // Форматируем ответ в понятную структуру
       const response = {
         id: userWithRole.id,
         username: userWithRole.username,
