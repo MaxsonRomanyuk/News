@@ -12,17 +12,20 @@
   "pluginOptions": {},
   "attributes": {
     "title": {
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "slug": {
       "type": "string",
       "unique": true
     },
     "content": {
-      "type": "blocks"
+      "type": "blocks",
+      "required": true
     },
     "excerpt": {
-      "type": "text"
+      "type": "text",
+      "required": true
     },
     "coverImage": {
       "type": "media",

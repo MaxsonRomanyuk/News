@@ -185,7 +185,14 @@ const canEditOrDelete = computed(() => {
 const fetchAllArticles = async () => {
   try {
     const response = await api.get('/articles?populate=coverImage,category,author&sort=publishDate:desc')
-    allArticles.value = response.data
+    
+    if (response.data && response.data.data) {
+      allArticles.value = response.data.data
+    } else if (Array.isArray(response.data)) {
+      allArticles.value = response.data
+    }
+    
+    console.log('📋 Все статьи для навигации:', allArticles.value.length)
   } catch (err) {
     console.error('Error fetching articles for navigation:', err)
   }
@@ -197,17 +204,29 @@ const fetchArticle = async () => {
   article.value = null
   
   try {
-    const response = await api.get(`/articles?filters[slug][$eq]=${route.params.slug}&populate=coverImage,category,author`)
+    const response = await api.get(`/articles/slug/${route.params.slug}?populate=coverImage,category,author`)
     
-    if (response.data.length > 0) {
-      article.value = response.data[0]
-       await incrementViews(response.data[0].id)
+    if (response.data && response.data.data) {
+      article.value = response.data.data
+      
+      if (response.data.data.id) {
+        await incrementViews(response.data.data.id)
+      }
+      console.log('✅ Статья загружена:', article.value.title)
     } else {
       error.value = 'Статья не найдена'
+      console.error('❌ Статья не найдена, response.data:', response.data)
     }
+    
   } catch (err: any) {
-    console.error('Error fetching article:', err)
-    error.value = 'Не удалось загрузить статью. Пожалуйста, попробуйте позже.'
+    console.error('❌ Ошибка загрузки статьи:', err)
+    if (err.response?.status === 404) {
+      error.value = 'Статья не найдена'
+    } else if (err.response?.status === 400) {
+      error.value = 'Неверный запрос'
+    } else {
+      error.value = 'Не удалось загрузить статью. Пожалуйста, попробуйте позже.'
+    }
   } finally {
     loading.value = false
   }

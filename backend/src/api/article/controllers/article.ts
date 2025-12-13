@@ -66,14 +66,74 @@ const logAudit = async (action: string, entityId: number, user: any, ctx: any, a
 export default ({ strapi }: { strapi: Core.Strapi }) => ({
   async find(ctx: any) {
     try {
-      const entities = await strapi.entityService.findMany('api::article.article', {
-        ...ctx.query,
+      let page = 1;
+      let pageSize = 6;
+      
+      if (ctx.query.pagination && ctx.query.pagination.page) {
+        page = parseInt(ctx.query.pagination.page);
+      }
+      if (ctx.query.pagination && ctx.query.pagination.pageSize) {
+        pageSize = parseInt(ctx.query.pagination.pageSize);
+      }
+
+      const start = (page - 1) * pageSize;
+      const filters: any = {};
+      const requestUrl = ctx.request.url;
+
+      if (requestUrl.includes('filters')) {
+        const url = new URL(`http://localhost${requestUrl}`);
+        const isFeaturedParam = url.searchParams.get('filters[isFeatured][$eq]');
+        const categoryParam = url.searchParams.get('filters[category][slug][$eq]');
+        const tagsParam = url.searchParams.get('filters[tags][$containsi]');
+      
+        if (isFeaturedParam) {
+          const isFeatured = isFeaturedParam === 'true';
+          filters.isFeatured = { $eq: isFeatured };
+        }
+      
+        if (categoryParam) {
+          filters.category = {
+            slug: { $eq: categoryParam }
+          };
+        }
+      
+        if (tagsParam) {
+          filters.tags = { $containsi: tagsParam };
+        }
+      }
+
+      const queryParams: any = {
         populate: ['coverImage', 'category', 'author'],
-      });
-      return entities;
+        sort: { publishDate: 'desc' },
+        limit: pageSize,
+        start: start
+      };
+      
+      if (Object.keys(filters).length > 0) {
+        queryParams.filters = filters;
+      }
+      
+      const articles = await strapi.entityService.findMany('api::article.article', queryParams);
+      const total = await strapi.entityService.count('api::article.article', 
+        Object.keys(filters).length > 0 ? { filters } : {}
+      );
+      const pageCount = Math.ceil(total / pageSize);
+      
+      return {
+        data: articles,
+        meta: {
+          pagination: {
+            page: page,
+            pageSize: pageSize,
+            pageCount: pageCount,
+            total: total
+          }
+        }
+      };
+      
     } catch (err) {
-      console.error('Find articles error:', err);
-      return ctx.internalServerError('Error fetching articles');
+      console.error('Find article error:', err);
+      return ctx.internalServerError('Error fetching article');
     }
   },
 
@@ -118,7 +178,10 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
         return ctx.notFound('Article not found');
       }
       
-      return entities[0];
+      return {
+        data: entities[0], 
+        meta: {}
+      };
     } catch (err) {
       console.error('FindBySlug article error:', err);
       return ctx.internalServerError('Error fetching article by slug');

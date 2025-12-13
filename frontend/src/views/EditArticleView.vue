@@ -90,12 +90,21 @@ const fetchArticle = async () => {
   try {
     const response = await api.get(`/articles?filters[slug][$eq]=${route.params.slug}&populate=category,author`)
     
-    if (response.data.length === 0) {
+    let foundArticle = null
+    if (response.data && response.data.data && Array.isArray(response.data.data)) {
+      if (response.data.data.length === 0) {
+        articleError.value = 'Статья не найдена'
+        return
+      }
+      foundArticle = response.data.data[0]
+    } 
+    else if (Array.isArray(response.data) && response.data.length > 0) {
+      foundArticle = response.data[0]
+    }
+    else {
       articleError.value = 'Статья не найдена'
       return
     }
-
-    const foundArticle = response.data[0]
     
     if (authStore.user?.role?.name !== 'Editor' && foundArticle.author?.id !== authStore.user?.id) {
       alert("У вас нет прав для редактирования этой статьи")

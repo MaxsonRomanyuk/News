@@ -446,14 +446,14 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
       'plugin::users-permissions.user'
     >;
     category: Schema.Attribute.Relation<'manyToOne', 'api::category.category'>;
-    content: Schema.Attribute.Blocks;
+    content: Schema.Attribute.Blocks & Schema.Attribute.Required;
     coverImage: Schema.Attribute.Media<
       'images' | 'files' | 'videos' | 'audios'
     >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    excerpt: Schema.Attribute.Text;
+    excerpt: Schema.Attribute.Text & Schema.Attribute.Required;
     isFeatured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -466,7 +466,7 @@ export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
     readingTime: Schema.Attribute.Decimal;
     slug: Schema.Attribute.String & Schema.Attribute.Unique;
     tags: Schema.Attribute.JSON;
-    title: Schema.Attribute.String;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

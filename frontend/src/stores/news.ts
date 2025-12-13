@@ -36,10 +36,10 @@ export const useNewsStore = defineStore('news', () => {
     loading.value = true;
     error.value = null;
     
-     if (newFilters) {
+    if (newFilters) {
       filters.value = { ...filters.value, ...newFilters };
     }
-
+  
     try {
       const params: any = {
         'populate': 'coverImage,category,author',
@@ -48,69 +48,35 @@ export const useNewsStore = defineStore('news', () => {
         'pagination[pageSize]': pagination.value.pageSize
       };
 
-      const filterConditions = [];
+      
       if (filters.value.category) {
-        filterConditions.push({
-          category: {
-            slug: { $eq: filters.value.category }
-          }
-        });
+        params['filters[category][slug][$eq]'] = filters.value.category;
       }
-
+  
       if (filters.value.isFeatured) {
-        filterConditions.push({
-          isFeatured: { $eq: true }
-        });
+        params['filters[isFeatured][$eq]'] = 'true';
       }
-
+  
       if (filters.value.tags.length > 0) {
-        filters.value.tags.forEach(tag => {
-          filterConditions.push({
-            tags: { $containsi: tag }
-          });
-        });
+        params['filters[tags][$containsi]'] = filters.value.tags[0];
       }
-
-      if (filterConditions.length > 0) {
-        params.filters = {
-          $and: filterConditions
-        };
-      }
-      console.log('🔍 Fetching articles with params:', params);
-
+  
       const response = await api.get('/articles', { params });
-
-      console.log('📦 API Response:', response.data); 
       
-
-      
-      let articlesData = [];
-      let paginationData = null;
-
-      if (Array.isArray(response.data)) {
-        articlesData = response.data;
-        paginationData = {
-          page: page,
-          pageSize: pagination.value.pageSize,
-          pageCount: Math.ceil(response.data.length / pagination.value.pageSize),
-          total: response.data.length
-        };
-      } else {
-        throw new Error('Unexpected API response format');
+      if (response.data && response.data.data) {
+        articles.value = response.data.data;
+        
+        if (response.data.meta?.pagination) {
+          pagination.value = {
+            page: response.data.meta.pagination.page,
+            pageSize: response.data.meta.pagination.pageSize,
+            pageCount: response.data.meta.pagination.pageCount,
+            total: response.data.meta.pagination.total
+          };
+        }
+        
       }
       
-      const startIndex = (page - 1) * pagination.value.pageSize;
-      const endIndex = startIndex + pagination.value.pageSize;
-      const paginatedArticles = articlesData.slice(startIndex, endIndex);
-      articles.value.splice(0, articles.value.length, ...paginatedArticles);
-      
-      pagination.value = {
-        page: paginationData.page || page,
-        pageSize: paginationData.pageSize || pagination.value.pageSize,
-        pageCount: paginationData.pageCount || Math.ceil(articlesData.length / pagination.value.pageSize),
-        total: paginationData.total || articlesData.length
-      };
-    
     } catch (err) {
       error.value = 'Не удалось загрузить новости';
       console.error('❌ Error fetching articles:', err);
